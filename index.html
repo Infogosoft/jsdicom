@@ -1,0 +1,27 @@
+<html>
+
+<head>
+    <title>DICOM</title>
+    <script type="text/javascript" src="js/jquery-1.7.min.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/javascript" src="js/fileread.js"></script>
+    <script type="text/javascript">
+
+    var app = new DcmApp();
+
+    $(document).ready(function() {
+        $("input[type=file]").change(app.loadFile);
+    });
+
+    </script>
+</head>
+<body>
+    <form name="selectfile">
+        <label for="file">File</label>
+        <input type="file" name="file" id="file"/>
+    </form>
+    <div id="info" ></div>
+    <ul id="loglist">
+    </ul>
+</body>
+</html>
