@@ -2,26 +2,56 @@
 
 <head>
     <title>DICOM</title>
+    <link rel="stylesheet" type="text/css" href="main.css" />
     <script type="text/javascript" src="js/jquery-1.7.min.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
-    <script type="text/javascript" src="js/fileread.js"></script>
+    <script type="text/javascript" src="js/binutils.js"></script>
+    <script type="text/javascript" src="js/dcmfile.js"></script>
+    <script type="text/javascript" src="js/dicomparser.js"></script>
     <script type="text/javascript">
 
-    var app = new DcmApp();
+    function image_loaded(app) {
+        console.log("image size: (" + app.width + ", " + app.height + ")");
+
+        var element = document.getElementById('c1');
+        var c = element.getContext("2d");
+        var imageData = c.createImageData(app.width, app.height);
+        for(var x=0;x<app.width;++x) {
+            for(var y=0;y<app.height;++y) {
+                data_idx = (x + y*512)*2;
+                var intensity = app.pixel_data[data_idx+1]*256.0 + app.pixel_data[data_idx];
+                //intensity = intensity/0xFF;
+                var canvas_idx = (x + y*512)*4;
+                imageData.data[canvas_idx] = intensity;
+                imageData.data[canvas_idx+1] = intensity;
+                imageData.data[canvas_idx+2] = intensity;
+                imageData.data[canvas_idx+3] = 0xFF;
+            }
+        }
+        c.putImageData(imageData, 0, 0);
+    }
+    var app = new DcmApp(image_loaded);
 
     $(document).ready(function() {
-        $("input[type=file]").change(app.loadFile);
+        $("input[type=file]").change(function(evt) {
+            app.loadFile(evt);
+        });
     });
 
     </script>
 </head>
 <body>
-    <form name="selectfile">
-        <label for="file">File</label>
-        <input type="file" name="file" id="file"/>
-    </form>
-    <div id="info" ></div>
-    <ul id="loglist">
-    </ul>
+    <div id="canvas-holder">
+        <canvas id="c1" width="512" height="512"></canvas>
+    </div>
+    <div id="right-sidebar">
+        <form name="selectfile">
+            <label for="file">File</label>
+            <input type="file" name="file" id="file"/>
+        </form>
+        <div id="info" ></div>
+        <ul id="loglist">
+        </ul>
+    </div>
 </body>
 </html>

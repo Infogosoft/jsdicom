@@ -5,21 +5,38 @@ function log(s)
     $("#loglist").append(logEntry);
 }
 
-function DcmApp() {
-    var parser;
-    var buffer;
-}
+function DcmApp(image_loaded) {
+    this.buffer;
+    this.pixel_data;
+    this.rows;
+    this.cols;
 
-DcmApp.prototype.loadFile = function(evt) 
-{
-    var file = evt.target.files[0];
-    var reader = new FileReader();
-    reader.onload = function(evt) {
-        log("File loaded");
-        buffer = evt.target.result;
-        log("Buffer size: " + buffer.length);
-        parser = new DicomParser(buffer);
-        parser.dumpTags();
+    // Callback
+    this.image_loaded = image_loaded;
+
+    this.loadFile = function(evt) 
+    {
+        console.log(this);
+        var file = evt.target.files[0];
+        var reader = new FileReader();
+        // Closure to bind app
+        reader.onload = (function(app) {
+            return function(evt) {
+                app.buffer = new Uint8Array(evt.target.result);
+                parser = new DicomParser(app.buffer);
+                var file = parser.parse_file();
+
+                var pn = file.get_tag(0x00100010);
+                log("Patients name: " + buffer_to_string(pn.data, pn.vl));
+                var width = file.get_tag(0x00280010);
+                var height = file.get_tag(0x00280011);
+                app.width = buffer_to_integer(width.data, width.vl);
+                app.height = buffer_to_integer(height.data, height.vl);
+                app.pixel_data = file.get_tag(0x7fe00010).data;
+                // Execute callback
+                app.image_loaded(app);
+            }
+        })(this);
+        reader.readAsArrayBuffer(file);
     }
-    reader.readAsBinaryString(file);
 }

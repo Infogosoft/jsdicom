@@ -1,0 +1,9 @@
+#right-sidebar {
+    float:left;
+    width: 400px;
+}
+#canvas-holder {
+    float: left;
+    width: 600px;
+}
+
