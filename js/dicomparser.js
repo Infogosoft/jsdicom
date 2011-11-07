@@ -61,6 +61,7 @@ DicomParser.prototype.parse_file = function() {
     offset += vl;
     var meta_element_end = offset+value;
 
+    // Parse File Meta Information
     while(offset < meta_element_end) {
         tag = this.read_tag(offset);
         offset += 4;

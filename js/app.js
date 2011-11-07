@@ -5,14 +5,14 @@ function log(s)
     $("#loglist").append(logEntry);
 }
 
-function DcmApp(image_loaded) {
+function DcmApp(file_loaded) {
     this.buffer;
     this.pixel_data;
     this.rows;
     this.cols;
 
     // Callback
-    this.image_loaded = image_loaded;
+    this.file_loaded = file_loaded;
 
     this.loadFile = function(evt) 
     {
@@ -34,7 +34,7 @@ function DcmApp(image_loaded) {
                 app.height = buffer_to_integer(height.data, height.vl);
                 app.pixel_data = file.get_tag(0x7fe00010).data;
                 // Execute callback
-                app.image_loaded(app);
+                app.file_loaded(app);
             }
         })(this);
         reader.readAsArrayBuffer(file);
