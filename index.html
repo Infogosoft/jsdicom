@@ -17,7 +17,10 @@
         console.log("image size: (" + app.width + ", " + app.height + ")");
         redraw_image();
     }
-    var app = new DcmApp(file_loaded);
+    var app = new DcmApp('c1');
+    function init() {
+        app.init();
+    }
 
     function redraw_image() {
         if (app.pixel_data == undefined)
@@ -55,34 +58,28 @@
 
     $(document).ready(function() {
         $("input[type=file]").change(function(evt) {
-            app.loadFile(evt);
+            app.load_file(evt);
         });
         $("#ww").change(function() {
             ww = parseFloat($(this).val());
-            redraw_image();
+            //redraw_image();
         });
         $("#wl").change(function() {
             wl = parseFloat($(this).val());
-            redraw_image();
+            //redraw_image();
         });
         $("canvas").mousemove(function(e) {
             wl = e.clientX*2;
             ww = e.clientY*4;
-            redraw_image();
+            //redraw_image();
         });
     });
 
     </script>
 </head>
-<body>
+<body onload="init();">
     <div id="canvas-holder">
         <canvas id="c1" width="512" height="512"></canvas>
-        <form name="tools">
-            <label for="wl">Window Level: </label>
-            <input type="text" name="wl" id="wl" value="1000">
-            <label for="ww">Window Width: </label>
-            <input type="text" name="ww" id="ww" value="100">
-        </form>
     </div>
     <div id="right-sidebar">
         <form name="selectfile">

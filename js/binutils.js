@@ -18,3 +18,16 @@ function buffer_to_integer(buffer, len) {
     }
     return n;
 }
+
+// Element to stuff
+
+function element_to_string(tag) {
+    return buffer_to_string(tag.data, tag.vl);
+}
+
+function element_to_integer(tag) {
+    // TODO: Handle all VRs
+    if(tag.vr == "DS")
+        return parseFloat(buffer_to_string(tag.data, tag.vl));
+    return buffer_to_integer(tag.data, tag.vl);
+}
