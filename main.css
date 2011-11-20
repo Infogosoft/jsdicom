@@ -2,8 +2,28 @@
     float:left;
     width: 400px;
 }
+#slider-holder {
+    width:512px;
+    margin-bottom: 10px;
+}
 #canvas-holder {
+    padding: 20px;
     float: left;
     width: 600px;
+}
+
+#dicomheader {
+    background: #000;
+    color: #3f3;
+}
+
+/* ui-slider overrides */
+.ui-slider-horizontal {
+    height: 0.5em;
+}
+
+.ui-slider .ui-slider-handle {
+    width: 1em;
+    height: 1em;
 }
 

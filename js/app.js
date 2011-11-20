@@ -5,6 +5,15 @@ function log(s)
     $("#loglist").append(logEntry);
 }
 
+function log_element(elem_repr) {
+    this.i = 0;
+    this.i++;
+    var elem_div = $("<div>").html(elem_repr);
+    if(this.i % 2 == 0)
+        elem_div.addClass("even");            
+    $("#dicomheader").append(elem_div);
+}
+
 function DcmApp(canvasid) {
 
     this.canvasid = canvasid;
@@ -14,22 +23,39 @@ function DcmApp(canvasid) {
     this.pixel_data;
     this.rows;
     this.cols;
-    this.ww;
-    this.wl;
+    this.ww = 1000;
+    this.wl = 500;
     this.rescaleSlope;
     this.rescaleIntercept;
 
     this.last_mouse_pos = [-1,-1];
     this.mouse_down = false;
 
+    this.files = []
+    this.curr_file_idx = 0;
 
-    this.load_file = function(evt) 
+    this.load_files = function(evt)
     {
-        console.log(this);
-        var file = evt.target.files[0];
+        var app = this;
+        this.curr_file_idx = 0;
+        this.files = Array(evt.target.files.length);
+        for(var i=0;i<evt.target.files.length;++i) {
+            this.load_file(evt.target.files[i], i);
+        }
+        $("#slider").slider({
+            value: 0,
+            max: this.files.length,
+            slide: function(ui, event) {
+                app.curr_file_idx = $(this).slider('value');
+                app.draw_image();
+            }
+        });
+    }
+
+    this.load_file = function(file, index) {
         var reader = new FileReader();
 
-        // Closure to bind app
+        // Closure to bind app, 'this' will be reader
         reader.onload = (function(app) {
             return function(evt) {
                 app.buffer = new Uint8Array(evt.target.result);
@@ -37,33 +63,36 @@ function DcmApp(canvasid) {
                 var file = parser.parse_file();
 
                 var pn = element_to_string(file.get_element(0x00100010));
-                log("Patients name: "+pn);
-                app.pixel_data = file.get_element(0x7fe00010).data;
-                app.width = element_to_integer(file.get_element(0x00280010));
-                app.height = element_to_integer(file.get_element(0x00280011));
+                file.pixel_data = file.get_element(0x7fe00010).data;
+                file.width = element_to_integer(file.get_element(0x00280010));
+                file.height = element_to_integer(file.get_element(0x00280011));
                 
-                app.rescaleSlope = element_to_integer(file.get_element(0x00281051));
-                app.rescaleIntercept = element_to_integer(file.get_element(0x00281052));
-                app.wl = 1000;
-                app.ww = 500;
-                app.draw_image();
+                file.rescaleSlope = element_to_integer(file.get_element(0x00281051));
+                file.rescaleIntercept = element_to_integer(file.get_element(0x00281052));
+                app.files[index] = file;
+                console.log("file " + index + " loaded");
+                if(index == 0) {
+                    app.draw_image();
+                }
             }
         })(this);
         reader.readAsArrayBuffer(file);
     }
 
     this.draw_image = function() {
-        if (this.pixel_data == undefined)
+        var curr_file = this.files[this.curr_file_idx];
+        if(curr_file == undefined)
             return;
         var element = document.getElementById(this.canvasid);
         var c = element.getContext("2d");
-        var imageData = c.createImageData(this.width, this.height);
-        for(var x=0;x<this.width;++x) {
-            for(var y=0;y<this.height;++y) {
-                data_idx = (x + y*this.width)*2;
-                var intensity = this.pixel_data[data_idx+1]*256.0 + this.pixel_data[data_idx];
-                var lower_bound = app.wl - app.ww;
-                var upper_bound = app.wl + app.ww;
+        var imageData = c.createImageData(512, 512);
+        for(var x=0;x<512;++x) {
+            for(var y=0;y<512;++y) {
+                data_idx = (x + y*512)*2;
+                var intensity = curr_file.pixel_data[data_idx+1]*256.0 + curr_file.pixel_data[data_idx];
+                intensity += curr_file.rescaleIntercept;
+                var lower_bound = app.wl - app.ww/2.0;
+                var upper_bound = app.wl + app.ww/2.0;
                 var intensity = (intensity - lower_bound)/upper_bound;
                 if(intensity < 0)
                     intensity = 0x00;
@@ -72,7 +101,7 @@ function DcmApp(canvasid) {
                 intensity *= 255;
 
                 // intensity = intensity/0xFF;
-                var canvas_idx = (x + y*this.width)*4;
+                var canvas_idx = (x + y*512)*4;
                 imageData.data[canvas_idx] = intensity;
                 imageData.data[canvas_idx+1] = intensity;
                 imageData.data[canvas_idx+2] = intensity;
@@ -86,17 +115,17 @@ function DcmApp(canvasid) {
     }
 
     this.init = function() {
-        console.log(this);
         var canvas = document.getElementById(this.canvasid);
         canvas.onmousemove = (function(app) {
             return function(evt) {
                 if(app.mouse_down) {
                     app.ww += evt.clientX - app.last_mouse_pos[0];
                     app.wl += evt.clientY - app.last_mouse_pos[1];
+                    app.ww = Math.max(2, app.ww);
+                    app.draw_image();
                 }
                 app.last_mouse_pos[0] = evt.clientX;
                 app.last_mouse_pos[1] = evt.clientY;
-                app.draw_image();
             }
         })(this);
 
@@ -111,5 +140,31 @@ function DcmApp(canvasid) {
                 app.mouse_down = false;
             }
         })(this);
+        canvas.onmouseout = (function(app) {
+            return function(evt) {
+                app.mouse_down = false;
+            }
+        })(this);
+        document.onkeydown = (function(app) {
+            return function(evt) {
+                //console.log(ect
+            }
+        })(this);
+        canvas.addEventListener('DOMMouseScroll', 
+                                (function(app) { 
+                                    return function(evt) { 
+                                        if(app.files.length == 0)
+                                            return;
+                                        if(app.curr_file_idx + evt.detail < app.files.length &&
+                                           app.curr_file_idx + evt.detail > 0) 
+                                        {
+                                            app.curr_file_idx += evt.detail;
+                                            console.log(app.curr_file_idx);
+                                            app.draw_image();
+                                           //app.load_file(app.files[app.curr_file_idx]);
+                                        }
+                                    }
+                                 })(this), 
+                                false);
     }
 }

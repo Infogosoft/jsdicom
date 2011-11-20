@@ -43,21 +43,19 @@ DicomParser.prototype.parse_file = function() {
         log("DICM key NOT found, aborting");
         return;
     }
+    // File Meta Information should always use Explicit VR Little Endian(1.2.840.10008.1.2.1)
     // Parse Meta Information Group Length
     var offset = 132;
     var tag = this.read_tag(offset);
     offset += 4;
 
     var vr = this.read_VR(offset);
-    console.log(vr);
     offset += 2;
 
     var vl = this.read_number(offset, 2);
-    console.log(vl);
     offset += 2;
 
     var value = this.read_number(offset, vl);
-    console.log(value);
     offset += vl;
     var meta_element_end = offset+value;
 
@@ -80,8 +78,17 @@ DicomParser.prototype.parse_file = function() {
         offset += vl;
     }
 
+    var transfer_syntax = element_to_string(file.get_meta_element(0x00020010));
+    // Get reader for transfer syntax
+    var element_reader = get_element_reader(transfer_syntax);
+    if(element_reader == undefined)
+        throw "Unknown TransferSyntaxUID";
     // Parse Dicom-Data-Set
     while(offset < this.buffer.length) {
+        var data_element = new DataElement();
+        offset = element_reader.read_element(this.buffer, offset, data_element);
+        file.data_elements.push(data_element);
+        continue;
         tag = this.read_tag(offset);
         offset += 4;
         vr = this.read_VR(offset);
@@ -95,6 +102,7 @@ DicomParser.prototype.parse_file = function() {
             offset += 2;
         }
         var data_element = new DataElement(tag, vr, vl, this.buffer.subarray(offset, offset+vl));
+        log_element(element_repr(data_element));
         file.data_elements.push(data_element);
         offset += vl;
     }
