@@ -2,13 +2,15 @@
 
 <head>
     <title>DICOM</title>
-    <link rel="stylesheet" type="text/css" href="jquery/css/ui-lightness/jquery-ui-1.8.16.custom.css" />
+    <link rel="stylesheet" type="text/css" href="jquery/css/custom-theme/jquery-ui-1.8.16.custom.css" />
     <link rel="stylesheet" type="text/css" href="main.css" />
 
     <script type="text/javascript" src="jquery/js/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
 
+    <script type="text/javascript" src="js/dcmdict.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/javascript" src="js/tools.js"></script>
     <script type="text/javascript" src="js/binutils.js"></script>
     <script type="text/javascript" src="js/dcmfile.js"></script>
     <script type="text/javascript" src="js/dicomparser.js"></script>
@@ -24,7 +26,6 @@
         if(i >= len-1)
             return;
         app.curr_file_idx = i;
-        console.log(i);
         app.draw_image();
         setTimeout((function(a, b) { 
                     return function() {
@@ -37,36 +38,105 @@
     $(document).ready(function() {
         app.init();
         $("input[type=file]").change(function(evt) {
-            app.load_files(evt);
+            //app.load_files(evt);
         });
         $("#test-scroll").click(function() {
             testscroll(0, app.files.length);
         });
 
         $("#slider").slider();
+
         $("button").button();
+
+        $("#axial-view").buttonset();
+
+        $("#view-metadata").click(function() {
+            app.fill_metadata_table();
+            $("#metadata-dialog").dialog({
+                modal: true,
+                width: 600,
+                button: {
+                    'Ok': function() {
+                        $(this).dialog('close');
+                    }
+                }
+            });
+        });
+
+        $("#open").click(function() {
+            $("#open-dialog").dialog({
+                    modal: true,
+                    buttons: {
+                        'Ok': function() {
+                            var file_input = $("input[type=file]")[0];
+                            app.load_files(file_input.files);
+                            $(this).dialog('close');
+                        },
+                        'Cancel': function() {
+                            $(this).dialog('close');
+                        }
+                    }
+                });
+        });
+
+        $("#butt-measure").click(function() {
+            app.active_measure_tool();
+        });
+
+        $("#butt-windowing").click(function() {
+            app.active_window_level_tool();
+        });
 
     });
 
     </script>
 </head>
 <body>
+    <div id="toolbox">
+        <h1>Tools</h1>
+        <div class="tool-group">
+            <button id="butt-measure">Measure 1</button>
+            <button id="butt-windowing">Windowing</button>
+        </div>
+    </div>
     <div id="canvas-holder">
+        <div id="toolbar" class="ui-widget-header ui-corner-all">
+            <button id="open">Open</button>
+            <button id="test-scroll">Slide through</button>
+            <button id="view-metadata">View metadata</button>
+        </div>
+
         <div id="slider-holder">
             <div id="slider"></div>
         </div>
         <canvas id="c1" width="512" height="512"></canvas>
     </div>
     <div id="right-sidebar">
-        <form name="selectfile">
-            <label for="file">File</label>
-            <input type="file" name="file" id="file" multiple="multiple"/>
-        </form>
-        <button id="test-scroll">Slide through</button>
         <div id="dicomheader"></div>
         <div id="info" ></div>
         <ul id="loglist">
         </ul>
+    </div>
+    <!-- Dialogs -->
+    <div id="open-dialog" class="hidden" title="Open files" style="display: none;">
+        <p>Select some files</p>
+        <form name="selectfile">
+            <label for="file">File</label>
+            <input type="file" name="file" id="file" multiple="multiple"/>
+        </form>
+    </div>
+    <div id="metadata-dialog" class="hidden" title="Metadata" style="display: none;">
+        <table id="metadata-table" width="100%">
+            <thead>
+                <tr>
+                    <td width="15%">Tag</td>
+                    <td width="40%">Name</td>
+                    <td width="35%">Value</td>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
     </div>
 </body>
 </html>

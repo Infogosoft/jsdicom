@@ -34,6 +34,13 @@ var element_to_repr = {
     "UL": buffer_to_unsigned
 }
 
+function tag_repr(tag) {
+    var t = tag.toString(16).toUpperCase();
+    while(t.length < 8)
+        t="0"+t;
+    t = "(" + t.substr(0,4) + ", " + t.substr(4,4) + ")"; 
+    return t;
+}
 // Element to stuff
 function element_repr(elem) {
     // Convert tag to dicom format

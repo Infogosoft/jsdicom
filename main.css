@@ -1,3 +1,13 @@
+body {
+    font-size: 10px;
+    font-family: Verdana,Arial,sans-serif;
+}
+
+td {
+    padding:0;
+    margin:0;
+}
+
 #right-sidebar {
     float:left;
     width: 400px;
@@ -5,6 +15,8 @@
 #slider-holder {
     width:512px;
     margin-bottom: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
 }
 #canvas-holder {
     padding: 20px;
@@ -17,6 +29,19 @@
     color: #3f3;
 }
 
+#toolbar {
+    width: 512px;
+    height: 25px;
+    margin-bottom: 10px;
+}
+
+#axial-view {
+    float: right;
+}
+
+.ui-button-text {
+    font-size: 10px;
+}
 /* ui-slider overrides */
 .ui-slider-horizontal {
     height: 0.5em;
@@ -27,3 +52,33 @@
     height: 1em;
 }
 
+#metadata-table {
+    font-size: 10px;
+    height: 500px;
+    display: block;
+    overflow: auto;
+}
+
+#metadata-table thead {
+    font-weight: bold;
+    background: #aaa;
+}
+
+tr.even {
+    background: #eee;
+}
+
+#toolbox {
+    float: left;
+    width: 150px;
+}
+
+.tool-group {
+    border: 1px solid;
+    border-radius: 7px 7px 7px 7px;
+    margin-bottom: 5px;
+}
+
+.tool-group h2 {
+    margin: 0px;
+}

@@ -14,39 +14,42 @@ function log_element(elem_repr) {
     $("#dicomheader").append(elem_div);
 }
 
+// CONSTANTS
+var TRANSVERSAL = 0;
+var CORONAL = 1;
+var SAGITTAL = 2;
 function DcmApp(canvasid) {
 
     this.canvasid = canvasid;
 
-    this.buffer;
-
-    this.pixel_data;
     this.rows;
     this.cols;
     this.ww = 1000;
     this.wl = 500;
-    this.rescaleSlope;
-    this.rescaleIntercept;
 
     this.last_mouse_pos = [-1,-1];
     this.mouse_down = false;
 
     this.files = []
     this.curr_file_idx = 0;
+    // tools
+    //this.curr_tool = new MeasureTool(this);
+    this.curr_tool = new WindowLevelTool(this);
 
-    this.load_files = function(evt)
+    this.load_files = function(files)
     {
         var app = this;
         this.curr_file_idx = 0;
-        this.files = Array(evt.target.files.length);
-        for(var i=0;i<evt.target.files.length;++i) {
-            this.load_file(evt.target.files[i], i);
+        this.files = Array(files.length);
+        for(var i=0;i<files.length;++i) {
+            this.load_file(files[i], i);
         }
         $("#slider").slider({
             value: 0,
             max: this.files.length,
             slide: function(ui, event) {
                 app.curr_file_idx = $(this).slider('value');
+                app.curr_tool.set_file(app.files[app.curr_file_idx]);
                 app.draw_image();
             }
         });
@@ -58,8 +61,8 @@ function DcmApp(canvasid) {
         // Closure to bind app, 'this' will be reader
         reader.onload = (function(app) {
             return function(evt) {
-                app.buffer = new Uint8Array(evt.target.result);
-                parser = new DicomParser(app.buffer);
+                var buffer = new Uint8Array(evt.target.result);
+                parser = new DicomParser(buffer);
                 var file = parser.parse_file();
 
                 var pn = element_to_string(file.get_element(0x00100010));
@@ -70,7 +73,6 @@ function DcmApp(canvasid) {
                 file.rescaleSlope = element_to_integer(file.get_element(0x00281051));
                 file.rescaleIntercept = element_to_integer(file.get_element(0x00281052));
                 app.files[index] = file;
-                console.log("file " + index + " loaded");
                 if(index == 0) {
                     app.draw_image();
                 }
@@ -86,9 +88,10 @@ function DcmApp(canvasid) {
         var element = document.getElementById(this.canvasid);
         var c = element.getContext("2d");
         var imageData = c.createImageData(512, 512);
-        for(var x=0;x<512;++x) {
-            for(var y=0;y<512;++y) {
-                data_idx = (x + y*512)*2;
+
+        for(var y=0;y<512;++y) {
+            for(var x=0;x<512;++x) {
+                var data_idx = (x + y*512)*2;
                 var intensity = curr_file.pixel_data[data_idx+1]*256.0 + curr_file.pixel_data[data_idx];
                 intensity += curr_file.rescaleIntercept;
                 var lower_bound = app.wl - app.ww/2.0;
@@ -100,7 +103,6 @@ function DcmApp(canvasid) {
                     intensity = 0xFF;
                 intensity *= 255;
 
-                // intensity = intensity/0xFF;
                 var canvas_idx = (x + y*512)*4;
                 imageData.data[canvas_idx] = intensity;
                 imageData.data[canvas_idx+1] = intensity;
@@ -108,63 +110,85 @@ function DcmApp(canvasid) {
                 imageData.data[canvas_idx+3] = 0xFF;
             }
         }
+
         c.putImageData(imageData, 0, 0);
         c.strokeStyle = 'white';
         c.strokeText("WL: " + this.wl, 5, 20);
         c.strokeText("WW: " + this.ww, 5, 40);
+        
+        // Call current tool for post draw operations
+        this.curr_tool.postdraw(c);
+    }
+
+
+    this.fill_metadata_table = function() {
+        if(this.files.length == 0)
+            return;
+        var file = this.files[this.curr_file_idx];
+        for(var i=0;i<file.data_elements.length;++i) {
+            var element = file.data_elements[i];
+            var tag = $("<td>").html(tag_repr(element.tag));
+            var dictmatch = dcmdict[element.tag];
+            var name = $("<td>").html("unknown");
+            if(dictmatch != undefined)
+                var name = $("<td>").html(dcmdict[element.tag][1]);
+            var value = $("<td>").html('N/A');
+            if(element.vr in element_to_repr)
+                var value = $("<td>").html(element_to_repr[element.vr](element.data, element.vl));
+
+            var tr = $("<tr>").append(tag).append(name).append(value);
+            if(i%2 == 0)
+                tr.addClass("even");
+            $("#metadata-table tbody").append(tr);
+        }
+    }
+
+    this.active_measure_tool = function() { 
+        this.curr_tool = new MeasureTool(this);
+        this.curr_tool.set_file(this.files[this.curr_file_idx]);
+    }
+
+    this.active_window_level_tool = function() { 
+        this.curr_tool = new WindowLevelTool(this);
+        this.curr_tool.set_file(this.files[this.curr_file_idx]);
     }
 
     this.init = function() {
         var canvas = document.getElementById(this.canvasid);
-        canvas.onmousemove = (function(app) {
-            return function(evt) {
-                if(app.mouse_down) {
-                    app.ww += evt.clientX - app.last_mouse_pos[0];
-                    app.wl += evt.clientY - app.last_mouse_pos[1];
-                    app.ww = Math.max(2, app.ww);
-                    app.draw_image();
-                }
-                app.last_mouse_pos[0] = evt.clientX;
-                app.last_mouse_pos[1] = evt.clientY;
+        var app = this;
+        canvas.onmousemove = function(evt) {
+            if (app.curr_tool.mousemove !== undefined)
+                app.curr_tool.mousemove(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
+            return;
+            if(app.mouse_down) {
+                app.ww += evt.clientX - app.last_mouse_pos[0];
+                app.wl += evt.clientY - app.last_mouse_pos[1];
+                app.ww = Math.max(2, app.ww);
+                app.draw_image();
             }
-        })(this);
+            app.last_mouse_pos[0] = evt.clientX;
+            app.last_mouse_pos[1] = evt.clientY;
+        }
 
-        canvas.onmousedown = (function(app) {
-            return function(evt) {
-                app.mouse_down = true;
-            }
-        })(this);
+        canvas.onmousedown = function(evt) {
+            if (app.curr_tool.mousedown !== undefined)
+                app.curr_tool.mousedown(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
+            app.mouse_down = true;
+        }
 
-        canvas.onmouseup = (function(app) {
-            return function(evt) {
-                app.mouse_down = false;
-            }
-        })(this);
-        canvas.onmouseout = (function(app) {
-            return function(evt) {
-                app.mouse_down = false;
-            }
-        })(this);
-        document.onkeydown = (function(app) {
-            return function(evt) {
-                //console.log(ect
-            }
-        })(this);
-        canvas.addEventListener('DOMMouseScroll', 
-                                (function(app) { 
-                                    return function(evt) { 
-                                        if(app.files.length == 0)
-                                            return;
-                                        if(app.curr_file_idx + evt.detail < app.files.length &&
-                                           app.curr_file_idx + evt.detail > 0) 
-                                        {
-                                            app.curr_file_idx += evt.detail;
-                                            console.log(app.curr_file_idx);
-                                            app.draw_image();
-                                           //app.load_file(app.files[app.curr_file_idx]);
-                                        }
-                                    }
-                                 })(this), 
-                                false);
+        canvas.onmouseup = function(evt) {
+            if (app.curr_tool.mouseup !== undefined)
+                app.curr_tool.mouseup(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
+            app.mouse_down = false;
+        }
+
+        canvas.onmouseout = function(evt) {
+            app.mouse_down = false;
+        }
+
+        canvas.onclick = function(evt) {
+            if (app.curr_tool.click !== undefined)
+                app.curr_tool.click(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
+        }
     }
 }
