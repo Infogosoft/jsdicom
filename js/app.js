@@ -14,22 +14,7 @@ function log_element(elem_repr) {
     $("#dicomheader").append(elem_div);
 }
 
-function PlainClut() {
-    this.r = function(intensity) {
-        return intensity;
-    }
-    this.g = function(intensity) {
-        return intensity;
-    }
-    this.b = function(intensity) {
-        return intensity;
-    }
-}
 
-// CONSTANTS
-var TRANSVERSAL = 0;
-var CORONAL = 1;
-var SAGITTAL = 2;
 function DcmApp(canvasid) {
 
     this.canvasid = canvasid;
@@ -46,9 +31,9 @@ function DcmApp(canvasid) {
     this.curr_file_idx = 0;
     // tools
     this.curr_tool = new WindowLevelTool(this);
-    this.curr_clut_r = rainbow_red;
-    this.curr_clut_g = rainbow_green;
-    this.curr_clut_b = rainbow_blue;
+    this.curr_clut_r = plain_red;
+    this.curr_clut_g = plain_green;
+    this.curr_clut_b = plain_blue;
 
     this.load_files = function(files)
     {
