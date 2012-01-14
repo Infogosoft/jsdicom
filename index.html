@@ -9,6 +9,8 @@
     <script type="text/javascript" src="jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
 
     <script type="text/javascript" src="js/dcmdict.js"></script>
+    <script type="text/javascript" src="js/cluts/rainbow.js"></script>
+    <script type="text/javascript" src="js/cluts/blackbody.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
     <script type="text/javascript" src="js/tools.js"></script>
     <script type="text/javascript" src="js/binutils.js"></script>
@@ -80,11 +82,14 @@
         });
 
         $("#butt-measure").click(function() {
-            app.active_measure_tool();
+            app.activate_measure_tool();
         });
 
         $("#butt-windowing").click(function() {
-            app.active_window_level_tool();
+            app.activate_window_level_tool();
+        });
+        $("#clut-select").change(function() {
+            app.set_clut($(this).val());
         });
 
     });
@@ -98,6 +103,13 @@
             <button id="butt-measure">Measure 1</button>
             <button id="butt-windowing">Windowing</button>
         </div>
+        <select id="clut-select">
+            <optgroup label="CLUT">
+                <option value="Plain">Plain</option>
+                <option value="Rainbow">Rainbow</option>
+                <option value="Blackbody">Blackbody</option>
+            </optgroup>
+        </select>
     </div>
     <div id="canvas-holder">
         <div id="toolbar" class="ui-widget-header ui-corner-all">

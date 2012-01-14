@@ -14,6 +14,18 @@ function log_element(elem_repr) {
     $("#dicomheader").append(elem_div);
 }
 
+function PlainClut() {
+    this.r = function(intensity) {
+        return intensity;
+    }
+    this.g = function(intensity) {
+        return intensity;
+    }
+    this.b = function(intensity) {
+        return intensity;
+    }
+}
+
 // CONSTANTS
 var TRANSVERSAL = 0;
 var CORONAL = 1;
@@ -33,8 +45,10 @@ function DcmApp(canvasid) {
     this.files = []
     this.curr_file_idx = 0;
     // tools
-    //this.curr_tool = new MeasureTool(this);
     this.curr_tool = new WindowLevelTool(this);
+    this.curr_clut_r = rainbow_red;
+    this.curr_clut_g = rainbow_green;
+    this.curr_clut_b = rainbow_blue;
 
     this.load_files = function(files)
     {
@@ -104,9 +118,13 @@ function DcmApp(canvasid) {
                 intensity *= 255;
 
                 var canvas_idx = (x + y*512)*4;
-                imageData.data[canvas_idx] = intensity;
-                imageData.data[canvas_idx+1] = intensity;
-                imageData.data[canvas_idx+2] = intensity;
+                var rounded_intensity = Math.round(intensity);
+                imageData.data[canvas_idx] = this.curr_clut_r[rounded_intensity];
+                imageData.data[canvas_idx+1] = this.curr_clut_g[rounded_intensity];
+                imageData.data[canvas_idx+2] = this.curr_clut_b[rounded_intensity];
+                //imageData.data[canvas_idx] = intensity;
+                //imageData.data[canvas_idx+1] = intensity;
+                //imageData.data[canvas_idx+2] = intensity;
                 imageData.data[canvas_idx+3] = 0xFF;
             }
         }
@@ -143,14 +161,29 @@ function DcmApp(canvasid) {
         }
     }
 
-    this.active_measure_tool = function() { 
+    this.activate_measure_tool = function() { 
         this.curr_tool = new MeasureTool(this);
         this.curr_tool.set_file(this.files[this.curr_file_idx]);
     }
 
-    this.active_window_level_tool = function() { 
+    this.activate_window_level_tool = function() { 
         this.curr_tool = new WindowLevelTool(this);
         this.curr_tool.set_file(this.files[this.curr_file_idx]);
+    }
+    this.set_clut = function(clutname) {
+        switch(clutname) {
+            case "Rainbow":
+                this.curr_clut_r = rainbow_red;
+                this.curr_clut_g = rainbow_green;
+                this.curr_clut_b = rainbow_blue;
+                break;
+            case "Blackbody":
+                this.curr_clut_r = blackbody_red;
+                this.curr_clut_g = blackbody_green;
+                this.curr_clut_b = blackbody_blue;
+                break;
+        }
+        this.draw_image();
     }
 
     this.init = function() {
