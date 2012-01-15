@@ -86,11 +86,11 @@ function DcmApp(canvasid) {
             return;
         var element = document.getElementById(this.canvasid);
         var c = element.getContext("2d");
-        var imageData = c.createImageData(512, 512);
+        var imageData = c.createImageData(curr_file.width, curr_file.height);
 
-        for(var y=0;y<512;++y) {
-            for(var x=0;x<512;++x) {
-                var data_idx = (x + y*512)*2;
+        for(var y=0;y<curr_file.height;++y) {
+            for(var x=0;x<curr_file.width;++x) {
+                var data_idx = (x + y*curr_file.width)*2;
                 var intensity = curr_file.pixel_data[data_idx+1]*256.0 + curr_file.pixel_data[data_idx];
                 intensity += curr_file.rescaleIntercept;
                 var lower_bound = app.wl - app.ww/2.0;
@@ -102,7 +102,7 @@ function DcmApp(canvasid) {
                     intensity = 0xFF;
                 intensity *= 255;
 
-                var canvas_idx = (x + y*512)*4;
+                var canvas_idx = (x + y*curr_file.width)*4;
                 var rounded_intensity = Math.round(intensity);
                 imageData.data[canvas_idx] = this.curr_clut_r[rounded_intensity];
                 imageData.data[canvas_idx+1] = this.curr_clut_g[rounded_intensity];
