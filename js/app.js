@@ -95,12 +95,12 @@ function DcmApp(canvasid) {
                 intensity += curr_file.rescaleIntercept;
                 var lower_bound = app.wl - app.ww/2.0;
                 var upper_bound = app.wl + app.ww/2.0;
-                var intensity = (intensity - lower_bound)/upper_bound;
+                var intensity = (intensity - lower_bound)*1.0/(upper_bound - lower_bound);
                 if(intensity < 0)
                     intensity = 0x00;
-                if(intensity > 100)
-                    intensity = 0xFF;
-                intensity *= 255;
+                if(intensity > 1.0)
+                    intensity = 1.0;
+                intensity *= 255.0;
 
                 var canvas_idx = (x + y*curr_file.width)*4;
                 var rounded_intensity = Math.round(intensity);
