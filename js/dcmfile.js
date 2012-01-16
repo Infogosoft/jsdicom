@@ -3,6 +3,20 @@ function DataElement(tag, vr, vl, data) {
     this.vr = vr;
     this.vl = vl;
     this.data = data;
+    this.get_value = function() {
+	if(this.vr in element_to_repr) {
+	    return element_to_value[this.vr](this.data, this.vl);
+	} else {
+	    return undefined;
+	}
+    }
+    this.get_repr = function() {
+	if(this.vr in element_to_repr) {
+	    return element_to_repr[this.vr](this.data, this.vl);
+	} else {
+	    return undefined;
+	}
+    }
 }
 
 function DcmFile() {

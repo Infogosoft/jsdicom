@@ -64,13 +64,15 @@ function DcmApp(canvasid) {
                 parser = new DicomParser(buffer);
                 var file = parser.parse_file();
 
-                var pn = element_to_string(file.get_element(0x00100010));
+                var pn = file.get_element(0x00100010).get_value()
                 file.pixel_data = file.get_element(0x7fe00010).data;
-                file.width = element_to_integer(file.get_element(0x00280010));
-                file.height = element_to_integer(file.get_element(0x00280011));
+                file.width = file.get_element(0x00280010).get_value();
+                file.height = file.get_element(0x00280011).get_value();
                 
-                file.rescaleSlope = element_to_integer(file.get_element(0x00281051));
-                file.rescaleIntercept = element_to_integer(file.get_element(0x00281052));
+                file.rescaleIntercept = file.get_element(0x00281052).get_value();
+                file.rescaleSlope = file.get_element(0x00281053).get_value();
+                app.wl = file.get_element(0x00281050).get_value();
+                app.ww = file.get_element(0x00281051).get_value();
                 app.files[index] = file;
                 if(index == 0) {
                     app.draw_image();
@@ -87,19 +89,21 @@ function DcmApp(canvasid) {
         var element = document.getElementById(this.canvasid);
         var c = element.getContext("2d");
         var imageData = c.createImageData(curr_file.width, curr_file.height);
-
+        
         for(var y=0;y<curr_file.height;++y) {
             for(var x=0;x<curr_file.width;++x) {
                 var data_idx = (x + y*curr_file.width)*2;
                 var intensity = curr_file.pixel_data[data_idx+1]*256.0 + curr_file.pixel_data[data_idx];
-                intensity += curr_file.rescaleIntercept;
+                intensity = intensity * curr_file.rescaleSlope + curr_file.rescaleIntercept;
                 var lower_bound = app.wl - app.ww/2.0;
                 var upper_bound = app.wl + app.ww/2.0;
-                var intensity = (intensity - lower_bound)*1.0/(upper_bound - lower_bound);
-                if(intensity < 0)
-                    intensity = 0x00;
+                var intensity = (intensity - lower_bound)/(upper_bound - lower_bound);
+                if(intensity < 0.0)
+                    intensity = 0.0;
                 if(intensity > 1.0)
                     intensity = 1.0;
+
+
                 intensity *= 255.0;
 
                 var canvas_idx = (x + y*curr_file.width)*4;
@@ -136,8 +140,10 @@ function DcmApp(canvasid) {
             if(dictmatch != undefined)
                 var name = $("<td>").html(dcmdict[element.tag][1]);
             var value = $("<td>").html('N/A');
-            if(element.vr in element_to_repr)
-                var value = $("<td>").html(element_to_repr[element.vr](element.data, element.vl));
+            var val = element.get_repr();
+            if(val != undefined) {
+                var value = $("<td>").html(element.get_value());
+            }
 
             var tr = $("<tr>").append(tag).append(name).append(value);
             if(i%2 == 0)

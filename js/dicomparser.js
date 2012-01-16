@@ -78,7 +78,7 @@ DicomParser.prototype.parse_file = function() {
         offset += vl;
     }
 
-    var transfer_syntax = element_to_string(file.get_meta_element(0x00020010));
+    var transfer_syntax = file.get_meta_element(0x00020010).get_value();
     // Get reader for transfer syntax
     var element_reader = get_element_reader(transfer_syntax);
     if(element_reader == undefined)

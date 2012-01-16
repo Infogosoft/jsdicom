@@ -10,6 +10,11 @@ function buffer_to_string(buffer, len)
     return s;
 }
 
+function buffer_to_string_float(buffer, len)
+{
+    return parseFloat(buffer_to_string(buffer, len));
+}
+
 function buffer_to_unsigned(buffer, len) {
     // NOTE: Only little endian for now
     var i = len-1;
@@ -29,10 +34,27 @@ var element_to_repr = {
     "CS": buffer_to_string,
     "UI": buffer_to_string,
     "DA": buffer_to_string,
+    "PN": buffer_to_string,
+    "TM": buffer_to_string,
     "UT": buffer_to_string,
     "US": buffer_to_unsigned,
     "UL": buffer_to_unsigned
 }
+
+var element_to_value = {
+    "AE": buffer_to_string,
+    "AS": buffer_to_string,
+    "DS": buffer_to_string_float,
+    "CS": buffer_to_string,
+    "UI": buffer_to_string,
+    "DA": buffer_to_string,
+    "PN": buffer_to_string,
+    "TM": buffer_to_string,
+    "UT": buffer_to_string,
+    "US": buffer_to_unsigned,
+    "UL": buffer_to_unsigned
+}
+
 
 function tag_repr(tag) {
     var t = tag.toString(16).toUpperCase();
@@ -53,16 +75,4 @@ function element_repr(elem) {
         return tag + " - " + element_to_repr[elem.vr](elem.data, elem.vl);
     }
     return tag + " VR: " + elem.vr;
-}
-
-function element_to_string(elem) {
-    return buffer_to_string(elem.data, elem.vl);
-}
-
-function element_to_integer(elem) {
-    // TODO: Handle all VRs
-    //console.log(buffer_to_string(elem.data, elem.vl));
-    if(elem.vr == "DS")
-        return parseFloat(buffer_to_string(elem.data, elem.vl));
-    return buffer_to_unsigned(elem.data, elem.vl);
 }
