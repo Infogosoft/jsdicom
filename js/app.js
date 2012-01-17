@@ -147,7 +147,7 @@ function DcmApp(canvasid) {
             var value = $("<td>").html('N/A');
             var val = element.get_repr();
             if(val != undefined) {
-                var value = $("<td>").html(element.get_value());
+                var value = $("<td>").html(element.get_repr());
             }
 
             var tr = $("<tr>").append(tag).append(name).append(value);

@@ -50,7 +50,7 @@ function DcmFile() {
     //this.pixel_data;
 
     this.getCTValue = function(col, row) {
-        if(col>=this.columns || row >= this.rows)
+        if(col < 0 || col >= this.columns || row < 0 || row >= this.rows)
             return undefined;
         var data_idx = (col + row*this.columns)*2;
         var intensity = this.pixel_data[data_idx+1]*256.0 + this.pixel_data[data_idx];
