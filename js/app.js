@@ -66,8 +66,8 @@ function DcmApp(canvasid) {
 
                 var pn = file.get_element(0x00100010).get_value()
                 file.pixel_data = file.get_element(0x7fe00010).data;
-                file.width = file.get_element(0x00280010).get_value();
-                file.height = file.get_element(0x00280011).get_value();
+                file.rows = file.get_element(0x00280010).get_value();
+                file.columns = file.get_element(0x00280011).get_value();
                 
                 file.rescaleIntercept = file.get_element(0x00281052).get_value();
                 file.rescaleSlope = file.get_element(0x00281053).get_value();
@@ -88,11 +88,11 @@ function DcmApp(canvasid) {
             return;
         var element = document.getElementById(this.canvasid);
         var c = element.getContext("2d");
-        var imageData = c.createImageData(curr_file.width, curr_file.height);
+        var imageData = c.createImageData(curr_file.columns, curr_file.rows);
         
-        for(var y=0;y<curr_file.height;++y) {
-            for(var x=0;x<curr_file.width;++x) {
-                var data_idx = (x + y*curr_file.width)*2;
+        for(var row=0;row<curr_file.rows;++row) {
+            for(var col=0;col<curr_file.columns;++col) {
+                var data_idx = (col + row*curr_file.columns)*2;
                 var intensity = curr_file.pixel_data[data_idx+1]*256.0 + curr_file.pixel_data[data_idx];
                 intensity = intensity * curr_file.rescaleSlope + curr_file.rescaleIntercept;
                 var lower_bound = app.wl - app.ww/2.0;
@@ -106,7 +106,7 @@ function DcmApp(canvasid) {
 
                 intensity *= 255.0;
 
-                var canvas_idx = (x + y*curr_file.width)*4;
+                var canvas_idx = (col + row*curr_file.columns)*4;
                 var rounded_intensity = Math.round(intensity);
                 imageData.data[canvas_idx] = this.curr_clut_r[rounded_intensity];
                 imageData.data[canvas_idx+1] = this.curr_clut_g[rounded_intensity];
@@ -161,6 +161,12 @@ function DcmApp(canvasid) {
         this.curr_tool = new WindowLevelTool(this);
         this.curr_tool.set_file(this.files[this.curr_file_idx]);
     }
+
+    this.mousemoveinfo = function(x, y) {
+        var curr_file = this.files[this.curr_file_idx];
+	$("#density").html(x + "," + y + " = " + curr_file.getCTValue(x, y));
+    }
+
     this.set_clut = function(clutname) {
         switch(clutname) {
             case "Rainbow":
@@ -183,6 +189,7 @@ function DcmApp(canvasid) {
         canvas.onmousemove = function(evt) {
             if (app.curr_tool.mousemove !== undefined)
                 app.curr_tool.mousemove(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
+	    app.mousemoveinfo(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
             return;
             if(app.mouse_down) {
                 app.ww += evt.clientX - app.last_mouse_pos[0];

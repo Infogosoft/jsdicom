@@ -4,18 +4,18 @@ function DataElement(tag, vr, vl, data) {
     this.vl = vl;
     this.data = data;
     this.get_value = function() {
-	if(this.vr in element_to_repr) {
-	    return element_to_value[this.vr](this.data, this.vl);
-	} else {
-	    return undefined;
-	}
+        if(this.vr in element_to_repr) {
+            return element_to_value[this.vr](this.data, this.vl);
+        } else {
+            return undefined;
+        }
     }
     this.get_repr = function() {
-	if(this.vr in element_to_repr) {
-	    return element_to_repr[this.vr](this.data, this.vl);
-	} else {
-	    return undefined;
-	}
+        if(this.vr in element_to_repr) {
+            return element_to_repr[this.vr](this.data, this.vl);
+        } else {
+            return undefined;
+        }
     }
 }
 
@@ -42,7 +42,16 @@ function DcmFile() {
     this.rescaleSlope;
     this.rescaleIntercept;
     this.pixel_data;
-    this.width;
-    this.height;
+    this.rows;
+    this.columns;
     //this.pixel_data;
+
+    this.getCTValue = function(col, row) {
+        if(col>=this.columns || row >= this.rows)
+            return undefined;
+        var data_idx = (col + row*this.columns)*2;
+        var intensity = this.pixel_data[data_idx+1]*256.0 + this.pixel_data[data_idx];
+        intensity = intensity * this.rescaleSlope + this.rescaleIntercept;
+        return intensity;
+    }
 }
