@@ -12,7 +12,11 @@ function buffer_to_string(buffer, len)
 
 function buffer_to_string_float(buffer, len)
 {
-    return parseFloat(buffer_to_string(buffer, len));
+    var vals = buffer_to_string(buffer, len).split("\\").map(parseFloat);
+    if(vals.length == 1)
+        return vals[0];
+    else
+        return vals;
 }
 
 function buffer_to_unsigned(buffer, len) {

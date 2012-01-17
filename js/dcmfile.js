@@ -44,6 +44,9 @@ function DcmFile() {
     this.pixel_data;
     this.rows;
     this.columns;
+    this.imagePosition;
+    this.imageOrientationRow;
+    this.imageOrientationColumn;
     //this.pixel_data;
 
     this.getCTValue = function(col, row) {
@@ -53,5 +56,11 @@ function DcmFile() {
         var intensity = this.pixel_data[data_idx+1]*256.0 + this.pixel_data[data_idx];
         intensity = intensity * this.rescaleSlope + this.rescaleIntercept;
         return intensity;
+    }
+
+    this.getPatientCoordinate = function(col, row) {
+        return [this.imagePosition[0] + row * this.imageOrientationRow[0] + col * this.imageOrientationColumn[0],
+                this.imagePosition[1] + row * this.imageOrientationRow[1] + col * this.imageOrientationColumn[1],
+                this.imagePosition[2] + row * this.imageOrientationRow[2] + col * this.imageOrientationColumn[2]];
     }
 }

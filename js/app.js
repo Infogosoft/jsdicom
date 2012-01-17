@@ -68,6 +68,10 @@ function DcmApp(canvasid) {
                 file.pixel_data = file.get_element(0x7fe00010).data;
                 file.rows = file.get_element(0x00280010).get_value();
                 file.columns = file.get_element(0x00280011).get_value();
+                file.imagePosition = file.get_element(0x00200032).get_value();
+                imageOrientation = file.get_element(0x00200037).get_value();
+                file.imageOrientationRow = imageOrientation.slice(0,3);
+                file.imageOrientationColumn = imageOrientation.slice(3,6);
                 
                 file.rescaleIntercept = file.get_element(0x00281052).get_value();
                 file.rescaleSlope = file.get_element(0x00281053).get_value();
@@ -125,6 +129,7 @@ function DcmApp(canvasid) {
         
         // Call current tool for post draw operations
         this.curr_tool.postdraw(c);
+        this.refreshmousemoveinfo();
     }
 
 
@@ -162,9 +167,19 @@ function DcmApp(canvasid) {
         this.curr_tool.set_file(this.files[this.curr_file_idx]);
     }
 
-    this.mousemoveinfo = function(x, y) {
+    this.mousemoveinfo = function(row, col) {
+        if (this.files.length <= this.curr_file_idx) {
+            $("#density").html("");
+            return;
+        }
         var curr_file = this.files[this.curr_file_idx];
-	$("#density").html(x + "," + y + " = " + curr_file.getCTValue(x, y));
+        var coord = curr_file.getPatientCoordinate(row,col);
+        var ctval = curr_file.getCTValue(row, col);
+        if (ctval == undefined) {
+            $("#density").html("");
+            return;
+        }
+        $("#density").html("rho(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1) + " HU");
     }
 
     this.set_clut = function(clutname) {
@@ -183,22 +198,21 @@ function DcmApp(canvasid) {
         this.draw_image();
     }
 
+    this.refreshmousemoveinfo = function() {
+        var canvas = document.getElementById(this.canvasid);
+        this.mousemoveinfo(this.last_mouse_pos[0] - canvas.offsetLeft, this.last_mouse_pos[1] - canvas.offsetTop);
+    }
+
     this.init = function() {
         var canvas = document.getElementById(this.canvasid);
         var app = this;
         canvas.onmousemove = function(evt) {
             if (app.curr_tool.mousemove !== undefined)
                 app.curr_tool.mousemove(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
-	    app.mousemoveinfo(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
-            return;
-            if(app.mouse_down) {
-                app.ww += evt.clientX - app.last_mouse_pos[0];
-                app.wl += evt.clientY - app.last_mouse_pos[1];
-                app.ww = Math.max(2, app.ww);
-                app.draw_image();
-            }
             app.last_mouse_pos[0] = evt.clientX;
             app.last_mouse_pos[1] = evt.clientY;
+            app.refreshmousemoveinfo();
+            return;
         }
 
         canvas.onmousedown = function(evt) {
