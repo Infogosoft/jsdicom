@@ -49,46 +49,38 @@ function element_reader(tag_reader, number_reader, implicit) {
         var vl;
         var vr;
 
-	if(implicit) {
-	    vr = "UN";
-	    if(tag in tags_vr) {
-		vr = tags_vr[tag];
-	    }
-	    
-	    vl = this._read_number(buffer, offset, 4);
-	    offset += 4;
-	} else {
-	    vr = read_vr(buffer, offset);
-	    if(vr == "OB" || vr == "OF" || vr == "SQ" || vr == "OW" || vr == "UN") { 
-		offset += 4;
-		vl = this._read_number(buffer, offset, 4);
-		offset += 4;
-            } else {
-		offset += 2;
-		vl = this._read_number(buffer, offset, 2);
-		offset += 2;
+        if(implicit) {
+            vr = "UN";
+            if(tag in dcmdict) {
+                vr = dcmdict[tag][0];
             }
-	}
-	
+            
+            vl = this._read_number(buffer, offset, 4);
+            offset += 4;
+        } else {
+            vr = read_vr(buffer, offset);
+            if(vr == "OB" || vr == "OF" || vr == "SQ" || vr == "OW" || vr == "UN") { 
+                offset += 4;
+                vl = this._read_number(buffer, offset, 4);
+                offset += 4;
+            } else {
+                offset += 2;
+                vl = this._read_number(buffer, offset, 2);
+                offset += 2;
+            }
+        }
+        
         element.tag = tag;
         element.vr = vr;
-        element.vl = vl;
-        element.data = buffer.subarray(offset, offset+vl);
-	
-        offset += vl;
+        if (vl == 0xffffffff)
+            element.vl = 0;
+        else
+            element.vl = vl;
+        element.data = buffer.subarray(offset, offset + element.vl);
+        
+        offset += element.vl;
         return offset;
     }
-}
-
-tags_vr = {
-    0x7fe00010: "OW", // PixelData
-    0x00100010: "PN", // Patients Name
-    0x00280010: "US", // Rows
-    0x00280011: "US", // Columns
-    0x00281050: "DS", // WindowCenter
-    0x00281051: "DS", // WindowWidth
-    0x00281052: "DS", // RescaleIntercept
-    0x00281053: "DS", // RescaleSlope
 }
 
 tag_readers = {

@@ -63,24 +63,33 @@ function DcmApp(canvasid) {
                 var buffer = new Uint8Array(evt.target.result);
                 parser = new DicomParser(buffer);
                 var file = parser.parse_file();
-
-                var pn = file.get_element(0x00100010).get_value()
-                file.pixel_data = file.get_element(0x7fe00010).data;
-                file.rows = file.get_element(0x00280010).get_value();
-                file.columns = file.get_element(0x00280011).get_value();
-                file.imagePosition = file.get_element(0x00200032).get_value();
-                imageOrientation = file.get_element(0x00200037).get_value();
-                file.imageOrientationRow = imageOrientation.slice(0,3);
-                file.imageOrientationColumn = imageOrientation.slice(3,6);
-                
-                file.rescaleIntercept = file.get_element(0x00281052).get_value();
-                file.rescaleSlope = file.get_element(0x00281053).get_value();
-                app.wl = file.get_element(0x00281050).get_value();
-                app.ww = file.get_element(0x00281051).get_value();
-                app.files[index] = file;
-                if(index == 0) {
-                    app.draw_image();
-                }
+		if (file == undefined) {
+		    app.files[index] = undefined;
+		    return;
+		}
+		file.modality = file.get_element(0x00080060).get_value();
+		
+		var pn = file.get_element(0x00100010).get_value();
+		if (file.modality == "CT" || file.modality == "PT" || file.modality == "MR") {
+                    file.pixel_data = file.get_element(0x7fe00010).data;
+                    file.rows = file.get_element(0x00280010).get_value();
+                    file.columns = file.get_element(0x00280011).get_value();
+                    file.imagePosition = file.get_element(0x00200032).get_value();
+                    imageOrientation = file.get_element(0x00200037).get_value();
+                    file.imageOrientationRow = imageOrientation.slice(0,3);
+                    file.imageOrientationColumn = imageOrientation.slice(3,6);
+                    
+                    file.rescaleIntercept = file.get_element(0x00281052).get_value();
+                    file.rescaleSlope = file.get_element(0x00281053).get_value();
+                    app.wl = file.get_element(0x00281050).get_value();
+                    app.ww = file.get_element(0x00281051).get_value();
+                    app.files[index] = file;
+                    if(index == 0) {
+			app.draw_image();
+                    }
+		} else {
+		    app.files[index] = file;
+		}
             }
         })(this);
         reader.readAsArrayBuffer(file);
@@ -173,6 +182,8 @@ function DcmApp(canvasid) {
             return;
         }
         var curr_file = this.files[this.curr_file_idx];
+	if (curr_file == undefined)
+	    return;
         var coord = curr_file.getPatientCoordinate(row,col);
         var ctval = curr_file.getCTValue(row, col);
         if (ctval == undefined) {
