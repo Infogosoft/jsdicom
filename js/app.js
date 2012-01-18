@@ -77,8 +77,8 @@ function DcmApp(canvasid) {
                 file.rescaleSlope = file.get_element(0x00281053).get_value();
                 app.files[index] = file;
                 if(index == 0) {
-                    app.wl = file.get_element(0x00281050).get_value()[0];
-                    app.ww = file.get_element(0x00281051).get_value()[0]; 
+                    app.wl = file.get_element(0x00281050).get_value();
+                    app.ww = file.get_element(0x00281051).get_value(); 
                     if(app.wl.constructor == Array)
                         app.wl = app.wl[0];
                     if(app.ww.constructor == Array)
