@@ -92,6 +92,9 @@
         $("#clut-select").change(function() {
             app.set_clut($(this).val());
         });
+        $("#window-presets").change(function() {
+            app.set_window_preset($(this).val());
+        });
 
     });
 
@@ -109,6 +112,10 @@
                 <option value="Plain">Plain</option>
                 <option value="Rainbow">Rainbow</option>
                 <option value="Blackbody">Blackbody</option>
+            </optgroup>
+        </select>
+        <select id="window-presets">
+            <optgroup label="Window presets">
             </optgroup>
         </select>
     </div>
