@@ -79,10 +79,13 @@ function DcmApp(canvasid) {
                 if(index == 0) {
                     app.wl = file.get_element(0x00281050).get_value();
                     app.ww = file.get_element(0x00281051).get_value(); 
-                    if(app.wl.constructor == Array)
+                    if(app.wl.constructor == Array) {
+                        app.update_window_preset_list(app.wl, app.ww);
                         app.wl = app.wl[0];
-                    if(app.ww.constructor == Array)
+                    }
+                    if(app.ww.constructor == Array) {
                         app.ww = app.ww[0];
+                    }
 
                     app.draw_image();
                 }
@@ -120,9 +123,6 @@ function DcmApp(canvasid) {
                 imageData.data[canvas_idx] = this.curr_clut_r[rounded_intensity];
                 imageData.data[canvas_idx+1] = this.curr_clut_g[rounded_intensity];
                 imageData.data[canvas_idx+2] = this.curr_clut_b[rounded_intensity];
-                //imageData.data[canvas_idx] = intensity;
-                //imageData.data[canvas_idx+1] = intensity;
-                //imageData.data[canvas_idx+2] = intensity;
                 imageData.data[canvas_idx+3] = 0xFF;
             }
         }
@@ -206,6 +206,22 @@ function DcmApp(canvasid) {
     this.refreshmousemoveinfo = function() {
         var canvas = document.getElementById(this.canvasid);
         this.mousemoveinfo(this.last_mouse_pos[0] - canvas.offsetLeft, this.last_mouse_pos[1] - canvas.offsetTop);
+    }
+
+    this.update_window_preset_list = function(wls, wws) { 
+        var optgroup = $("#window-presets").find("optgroup")
+        optgroup.empty();
+        for(var i=0;i<wws.length;++i) {
+            var option = $("<option>").val(wls[i] + "," + wws[i]).text(wls[i] + " - " + wws[i]);
+            optgroup.append(option);
+        }
+    }
+    this.set_window_preset = function(value) { 
+        var spl = value.split(",");
+        console.log(spl);
+        this.wl = parseFloat(spl[0]);
+        this.ww = parseFloat(spl[1]);
+        this.draw_image();
     }
 
     this.init = function() {
