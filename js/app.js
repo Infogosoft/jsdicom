@@ -28,8 +28,8 @@ function DcmApp(canvasid) {
     this.mouse_down = false;
 
     this.series = {};
-    this.curr_serie = 0;
-    this.files = [];
+    this.curr_serie_uid = "";
+    this.files = []; // points to files-array in current series
     this.files_loaded = 0;
     this.curr_file_idx = 0;
     // tools
@@ -43,13 +43,12 @@ function DcmApp(canvasid) {
         var app = this;
         this.curr_file_idx = 0;
         this.files_loaded = 0;
-        this.files = Array(files.length);
         for(var i=0;i<files.length;++i) {
-            this.load_file(files[i], i);
+            this.load_file(files[i], i, files.length);
         }
         $("#slider").slider({
             value: 0,
-            max: this.files.length,
+            max: files.length,
             slide: function(ui, event) {
                 app.curr_file_idx = $(this).slider('value');
                 app.curr_tool.set_file(app.files[app.curr_file_idx]);
@@ -59,7 +58,7 @@ function DcmApp(canvasid) {
     }
 
 
-    this.load_file = function(file, index) {
+    this.load_file = function(file, index, file_count) {
         var reader = new FileReader();
 
         // Closure to bind app, 'this' will be reader
@@ -86,25 +85,19 @@ function DcmApp(canvasid) {
                     
                     file.rescaleIntercept = file.get_element(0x00281052).get_value();
                     file.rescaleSlope = file.get_element(0x00281053).get_value();
-                    app.files[index] = file;
+                    //app.files[index] = file;
                     app.organize_file(file);
                     if(index == 0) {
-                        app.wl = file.get_element(0x00281050).get_value();
-                        app.ww = file.get_element(0x00281051).get_value(); 
-                        if(app.wl.constructor == Array) {
-                            app.update_window_preset_list(app.wl, app.ww);
-                            app.wl = app.wl[0];
-                        }
-                        if(app.ww.constructor == Array) {
-                            app.ww = app.ww[0];
-                        }
-                        app.draw_image();
+                        
+                        app.curr_serie_uid = file.get_element(0x0020000e).get_value();
+                        app.files = app.series[app.curr_serie_uid].files;
+                        //app.draw_image();
                     }
                 } else {
                     app.files[index] = file;
                 }
                 ++app.files_loaded;
-                if(app.files_loaded == app.files.length) {
+                if(app.files_loaded == file_count) {
                     // All files are loaded
                     app.setup_series_selection();
                 }
@@ -125,18 +118,52 @@ function DcmApp(canvasid) {
         this.series[series_uid].files.push(file);
     }
 
+
     this.setup_series_selection = function() {
+        var app = this;
         var series_list = $("#series-selection");
         series_list.empty();
-        for(var key in this.series) {
-            series_list.append($("<li>").text(this.series[key].seriesDescription));
+        for(var uid in this.series) {
+            instance_number_sort(this.series[uid].files);
+            var item = $("<li>").text(this.series[uid].seriesDescription);
+            item.addClass('series-link');
+            if(uid == this.curr_serie_uid) {
+                item.addClass('series-selected');
+            }
+            item.click((function(u) {
+                return function() {
+                    series_list.find("li").removeClass('series-selected');
+                    $(this).addClass('series-selected');
+                    app.set_serie(u);
+                }
+            })(uid));
+            series_list.append(item);
         }
+        this.set_serie(this.curr_serie_uid);
+
+    }
+
+    this.set_serie = function(series_uid) {
+        console.log(series_uid);
+        this.files = this.series[series_uid].files;
+        app.wl = this.files[0].get_element(0x00281050).get_value();
+        app.ww = this.files[0].get_element(0x00281051).get_value(); 
+        if(app.wl.constructor == Array) {
+            app.update_window_preset_list(app.wl, app.ww);
+            app.wl = app.wl[0];
+        }
+        if(app.ww.constructor == Array) {
+            app.ww = app.ww[0];
+        }
+        this.curr_file_idx = 0;
+        this.draw_image();
     }
 
     this.draw_image = function() {
         var curr_file = this.files[this.curr_file_idx];
         if(curr_file == undefined)
             return;
+        console.log(curr_file.get_element(0x00200013).get_value());
         var element = document.getElementById(this.canvasid);
         var c = element.getContext("2d");
         var imageData = c.createImageData(curr_file.columns, curr_file.rows);
@@ -259,7 +286,6 @@ function DcmApp(canvasid) {
     }
     this.set_window_preset = function(value) { 
         var spl = value.split(",");
-        console.log(spl);
         this.wl = parseFloat(spl[0]);
         this.ww = parseFloat(spl[1]);
         this.draw_image();

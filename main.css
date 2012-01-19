@@ -82,3 +82,11 @@ tr.even {
 .tool-group h2 {
     margin: 0px;
 }
+
+.series-link {
+    cursor: pointer;
+}
+
+.series-selected {
+    font-weight: bold;
+}
