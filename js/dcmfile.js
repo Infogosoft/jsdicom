@@ -4,7 +4,7 @@ function DataElement(tag, vr, vl, data) {
     this.vl = vl;
     this.data = data;
     this.get_value = function() {
-        if(this.vr in element_to_repr) {
+        if(this.vr in element_to_value) {
             return element_to_value[this.vr](this.data, this.vl);
         } else {
             return undefined;

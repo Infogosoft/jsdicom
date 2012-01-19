@@ -27,7 +27,10 @@ function DcmApp(canvasid) {
     this.last_mouse_pos = [-1,-1];
     this.mouse_down = false;
 
-    this.files = []
+    this.series = {};
+    this.curr_serie = 0;
+    this.files = [];
+    this.files_loaded = 0;
     this.curr_file_idx = 0;
     // tools
     this.curr_tool = new WindowLevelTool(this);
@@ -39,6 +42,7 @@ function DcmApp(canvasid) {
     {
         var app = this;
         this.curr_file_idx = 0;
+        this.files_loaded = 0;
         this.files = Array(files.length);
         for(var i=0;i<files.length;++i) {
             this.load_file(files[i], i);
@@ -53,6 +57,7 @@ function DcmApp(canvasid) {
             }
         });
     }
+
 
     this.load_file = function(file, index) {
         var reader = new FileReader();
@@ -82,6 +87,7 @@ function DcmApp(canvasid) {
                     file.rescaleIntercept = file.get_element(0x00281052).get_value();
                     file.rescaleSlope = file.get_element(0x00281053).get_value();
                     app.files[index] = file;
+                    app.organize_file(file);
                     if(index == 0) {
                         app.wl = file.get_element(0x00281050).get_value();
                         app.ww = file.get_element(0x00281051).get_value(); 
@@ -92,15 +98,39 @@ function DcmApp(canvasid) {
                         if(app.ww.constructor == Array) {
                             app.ww = app.ww[0];
                         }
-                        
                         app.draw_image();
                     }
                 } else {
                     app.files[index] = file;
                 }
+                ++app.files_loaded;
+                if(app.files_loaded == app.files.length) {
+                    // All files are loaded
+                    app.setup_series_selection();
+                }
             }
         })(this);
         reader.readAsArrayBuffer(file);
+    }
+
+    this.organize_file = function(file) {
+        var series_uid = file.get_element(0x0020000e).get_value();
+        var series_desc = file.get_element(0x0008103e).get_value();
+        if(!this.series.hasOwnProperty(series_uid)) {
+            var serie = new DcmSerie();
+            serie.seriesUID = series_uid;
+            serie.seriesDescription = series_desc;
+            this.series[series_uid] = serie;
+        }
+        this.series[series_uid].files.push(file);
+    }
+
+    this.setup_series_selection = function() {
+        var series_list = $("#series-selection");
+        series_list.empty();
+        for(var key in this.series) {
+            series_list.append($("<li>").text(this.series[key].seriesDescription));
+        }
     }
 
     this.draw_image = function() {

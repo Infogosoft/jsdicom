@@ -53,6 +53,7 @@ var element_to_value = {
     "UI": buffer_to_string,
     "DA": buffer_to_string,
     "PN": buffer_to_string,
+    "LO": buffer_to_string,
     "TM": buffer_to_string,
     "UT": buffer_to_string,
     "US": buffer_to_unsigned,
