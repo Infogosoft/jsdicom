@@ -19,10 +19,10 @@ function DcmApp(canvasid) {
 
     this.canvasid = canvasid;
 
-    this.rows;
-    this.cols;
     this.ww = 1000;
     this.wl = 500;
+    this.scale_factor = 1;
+    this.pan = [0,0];
 
     this.last_mouse_pos = [-1,-1];
     this.mouse_down = false;
@@ -144,7 +144,6 @@ function DcmApp(canvasid) {
     }
 
     this.set_serie = function(series_uid) {
-        console.log(series_uid);
         this.files = this.series[series_uid].files;
         app.wl = this.files[0].get_element(0x00281050).get_value();
         app.ww = this.files[0].get_element(0x00281051).get_value(); 
@@ -163,9 +162,11 @@ function DcmApp(canvasid) {
         var curr_file = this.files[this.curr_file_idx];
         if(curr_file == undefined)
             return;
-        console.log(curr_file.get_element(0x00200013).get_value());
-        var element = document.getElementById(this.canvasid);
-        var c = element.getContext("2d");
+        //var temp_canvas = document.createElement("canvas");
+        var temp_canvas = document.getElementById(this.canvasid);
+        temp_canvas.width = curr_file.rows;
+        temp_canvas.height = curr_file.rows;
+        var c = temp_canvas.getContext("2d");
         var imageData = c.createImageData(curr_file.columns, curr_file.rows);
         
         for(var row=0;row<curr_file.rows;++row) {
@@ -201,6 +202,16 @@ function DcmApp(canvasid) {
         // Call current tool for post draw operations
         this.curr_tool.postdraw(c);
         this.refreshmousemoveinfo();
+        /*var canvas = document.getElementById(this.canvasid);
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, curr_file.rows, curr_file.rows);
+        var scaled_width = curr_file.rows*this.scale_factor;
+        var scaled_height = curr_file.columns*this.scale_factor;
+        ctx.drawImage(temp_canvas, (curr_file.rows-scaled_width)/2, (curr_file.columns-scaled_height)/2, scaled_width, scaled_height);
+        //ctx.drawImage(temp_canvas, 0, 0, 512, 512);
+        ctx.strokeStyle = 'white';
+        ctx.strokeText("WL: " + this.wl, 5, 20);
+        ctx.strokeText("WW: " + this.ww, 5, 40);*/
     }
 
 
@@ -235,6 +246,11 @@ function DcmApp(canvasid) {
 
     this.activate_window_level_tool = function() { 
         this.curr_tool = new WindowLevelTool(this);
+        this.curr_tool.set_file(this.files[this.curr_file_idx]);
+    }
+
+    this.activate_zooming = function() { 
+        this.curr_tool = new ScaleTool(this);
         this.curr_tool.set_file(this.files[this.curr_file_idx]);
     }
 

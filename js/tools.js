@@ -101,3 +101,39 @@ function WindowLevelTool(app) {
     this.set_file = function(file) {
     }
 }
+
+function ScaleTool(app) {
+    this.is_mouse_down = false;
+    this.app = app;
+    this.mouse_down_pos_y = 0;
+
+    this.mousedown = function(x, y) {
+        this.is_mouse_down = true;
+        this.mouse_down_pos_y = y;
+    }
+
+    this.mouseup = function(x, y) {
+        this.is_mouse_down = false;
+    }
+
+    this.mousemove = function(x, y) {
+        if(this.is_mouse_down) {
+            var pos_diff = (this.mouse_down_pos_y - y)/100.0;
+            // poor man's clamp
+            app.scale_factor += pos_diff;
+            app.scale_factor = Math.max(0.2, Math.min(app.scale_factor, 10));
+            console.log(app.scale_factor);
+            app.draw_image();
+        }
+        this.mouse_down_pos_y = y;
+    }
+
+    this.postdraw = function(canvas) {
+    }
+
+    this.click = function(x, y) {
+    }
+
+    this.set_file = function(file) {
+    }
+}
