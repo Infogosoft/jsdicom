@@ -30,6 +30,11 @@ function buffer_to_unsigned(buffer, len) {
     }
     return n;
 }
+
+function buffer_to_integer_string(buffer, len) {
+    return parseInt(buffer_to_string(buffer, len));
+}
+
 // Converts value to readable format
 var element_to_repr = {
     "AE": buffer_to_string,
@@ -42,7 +47,8 @@ var element_to_repr = {
     "TM": buffer_to_string,
     "UT": buffer_to_string,
     "US": buffer_to_unsigned,
-    "UL": buffer_to_unsigned
+    "UL": buffer_to_unsigned,
+    "IS": buffer_to_integer_string
 }
 
 var element_to_value = {
@@ -53,10 +59,12 @@ var element_to_value = {
     "UI": buffer_to_string,
     "DA": buffer_to_string,
     "PN": buffer_to_string,
+    "LO": buffer_to_string,
     "TM": buffer_to_string,
     "UT": buffer_to_string,
     "US": buffer_to_unsigned,
-    "UL": buffer_to_unsigned
+    "UL": buffer_to_unsigned,
+    "IS": buffer_to_integer_string
 }
 
 

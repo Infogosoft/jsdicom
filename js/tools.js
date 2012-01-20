@@ -101,3 +101,77 @@ function WindowLevelTool(app) {
     this.set_file = function(file) {
     }
 }
+
+function ScaleTool(app) {
+    this.is_mouse_down = false;
+    this.app = app;
+    this.mouse_down_pos_y = 0;
+
+    this.mousedown = function(x, y) {
+        this.is_mouse_down = true;
+        this.mouse_down_pos_y = y;
+    }
+
+    this.mouseup = function(x, y) {
+        this.is_mouse_down = false;
+    }
+
+    this.mousemove = function(x, y) {
+        if(this.is_mouse_down) {
+            var pos_diff = (this.mouse_down_pos_y - y)/100.0;
+            // poor man's clamp
+            app.scale_factor += pos_diff;
+            app.scale_factor = Math.max(0.2, Math.min(app.scale_factor, 10));
+            app.draw_image();
+        }
+        this.mouse_down_pos_y = y;
+    }
+
+    this.postdraw = function(canvas) {
+    }
+
+    this.click = function(x, y) {
+    }
+
+    this.set_file = function(file) {
+    }
+}
+
+function PanTool(app) {
+    this.is_mouse_down = false;
+    this.app = app;
+    this.last_mouse_pos_x = 0;
+    this.last_mouse_pos_y = 0;
+
+    this.mousedown = function(x, y) {
+        this.is_mouse_down = true;
+        this.last_mouse_pos_x = y;
+        this.last_mouse_pos_y = y;
+    }
+
+    this.mouseup = function(x, y) {
+        this.is_mouse_down = false;
+    }
+
+    this.mousemove = function(x, y) {
+        if(this.is_mouse_down) {
+            var xdiff = (this.mouse_down_pos_x - x);
+            var ydiff = (this.mouse_down_pos_y - y);
+            // poor man's clamp
+            app.pan[0] += xdiff;
+            app.pan[1] += ydiff;
+            app.draw_image();
+        }
+        this.mouse_down_pos_x = x;
+        this.mouse_down_pos_y = y;
+    }
+
+    this.postdraw = function(canvas) {
+    }
+
+    this.click = function(x, y) {
+    }
+
+    this.set_file = function(file) {
+    }
+}
