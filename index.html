@@ -94,6 +94,9 @@
         $("#butt-zooming").click(function() {
             app.activate_zooming();
         });
+        $("#butt-panning").click(function() {
+            app.activate_panning();
+        });
         $("#clut-select").change(function() {
             app.set_clut($(this).val());
         });
@@ -112,6 +115,7 @@
             <button id="butt-measure">Measure 1</button>
             <button id="butt-windowing">Windowing</button>
             <button id="butt-zooming">Zoom</button>
+            <button id="butt-panning">Pan</button>
         </div>
         <select id="clut-select">
             <optgroup label="CLUT">

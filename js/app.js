@@ -162,8 +162,8 @@ function DcmApp(canvasid) {
         var curr_file = this.files[this.curr_file_idx];
         if(curr_file == undefined)
             return;
-        //var temp_canvas = document.createElement("canvas");
-        var temp_canvas = document.getElementById(this.canvasid);
+        var temp_canvas = document.createElement("canvas");
+        //var temp_canvas = document.getElementById(this.canvasid);
         temp_canvas.width = curr_file.rows;
         temp_canvas.height = curr_file.rows;
         var c = temp_canvas.getContext("2d");
@@ -195,23 +195,25 @@ function DcmApp(canvasid) {
         }
 
         c.putImageData(imageData, 0, 0);
-        c.strokeStyle = 'white';
-        c.strokeText("WL: " + this.wl, 5, 20);
-        c.strokeText("WW: " + this.ww, 5, 40);
+        //c.strokeStyle = 'white';
+        //c.strokeText("WL: " + this.wl, 5, 20);
+        //c.strokeText("WW: " + this.ww, 5, 40);
         
         // Call current tool for post draw operations
         this.curr_tool.postdraw(c);
         this.refreshmousemoveinfo();
-        /*var canvas = document.getElementById(this.canvasid);
+        var canvas = document.getElementById(this.canvasid);
         var ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, curr_file.rows, curr_file.rows);
         var scaled_width = curr_file.rows*this.scale_factor;
         var scaled_height = curr_file.columns*this.scale_factor;
-        ctx.drawImage(temp_canvas, (curr_file.rows-scaled_width)/2, (curr_file.columns-scaled_height)/2, scaled_width, scaled_height);
+        var offset_x = (curr_file.rows-scaled_width-this.pan[0])/2;
+        var offset_y = (curr_file.columns-scaled_height-this.pan[1])/2;
+        ctx.drawImage(temp_canvas, offset_x, offset_y, scaled_width, scaled_height);
         //ctx.drawImage(temp_canvas, 0, 0, 512, 512);
         ctx.strokeStyle = 'white';
         ctx.strokeText("WL: " + this.wl, 5, 20);
-        ctx.strokeText("WW: " + this.ww, 5, 40);*/
+        ctx.strokeText("WW: " + this.ww, 5, 40);
     }
 
 
@@ -251,6 +253,11 @@ function DcmApp(canvasid) {
 
     this.activate_zooming = function() { 
         this.curr_tool = new ScaleTool(this);
+        this.curr_tool.set_file(this.files[this.curr_file_idx]);
+    }
+
+    this.activate_panning = function() { 
+        this.curr_tool = new PanTool(this);
         this.curr_tool.set_file(this.files[this.curr_file_idx]);
     }
 
