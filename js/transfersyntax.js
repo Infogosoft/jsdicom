@@ -45,28 +45,35 @@ function element_reader(tag_reader, number_reader, implicit) {
     this.read_element = function(buffer, offset, element /* out */) {
         var tag = this._read_tag(buffer, offset)
         offset += 4;
-
+        
         var vl;
         var vr;
-
-        if(implicit) {
-            vr = "UN";
-            if(tag in dcmdict) {
-                vr = dcmdict[tag][0];
-            }
-            
+        if (tag == 0xfffee000 || tag == 0xfffee00d || tag == 0xfffee0dd) {
+            // Item delimiters
             vl = this._read_number(buffer, offset, 4);
             offset += 4;
+            vr = "N/A";
         } else {
-            vr = read_vr(buffer, offset);
-            if(vr == "OB" || vr == "OF" || vr == "SQ" || vr == "OW" || vr == "UN") { 
-                offset += 4;
+            
+            if(implicit) {
+                vr = "UN";
+                if(tag in dcmdict) {
+                    vr = dcmdict[tag][0];
+                }
+                
                 vl = this._read_number(buffer, offset, 4);
                 offset += 4;
             } else {
-                offset += 2;
-                vl = this._read_number(buffer, offset, 2);
-                offset += 2;
+                vr = read_vr(buffer, offset);
+                if(vr == "OB" || vr == "OF" || vr == "SQ" || vr == "OW" || vr == "UN") { 
+                    offset += 4;
+                    vl = this._read_number(buffer, offset, 4);
+                    offset += 4;
+                } else {
+                    offset += 2;
+                    vl = this._read_number(buffer, offset, 2);
+                    offset += 2;
+                }
             }
         }
         
