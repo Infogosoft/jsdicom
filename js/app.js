@@ -145,14 +145,18 @@ function DcmApp(canvasid) {
 
     this.set_serie = function(series_uid) {
         this.files = this.series[series_uid].files;
-        app.wl = this.files[0].get_element(0x00281050).get_value();
-        app.ww = this.files[0].get_element(0x00281051).get_value(); 
-        if(app.wl.constructor == Array) {
-            app.update_window_preset_list(app.wl, app.ww);
-            app.wl = app.wl[0];
-        }
-        if(app.ww.constructor == Array) {
-            app.ww = app.ww[0];
+        if(this.files[0].get_element(0x00281050) !== 0) {
+            app.wl = this.files[0].get_element(0x00281050).get_value();
+            app.ww = this.files[0].get_element(0x00281051).get_value(); 
+            if(app.wl.constructor == Array) {
+                app.update_window_preset_list(app.wl, app.ww);
+                app.wl = app.wl[0];
+            }
+            if(app.ww.constructor == Array) {
+                app.ww = app.ww[0];
+            }
+        } else {
+            // TODO: Set to some default based on modality?
         }
         this.curr_file_idx = 0;
         this.draw_image();
@@ -162,7 +166,7 @@ function DcmApp(canvasid) {
         var curr_file = this.files[this.curr_file_idx];
         if(curr_file == undefined)
             return;
-        var temp_canvas = document.createElement("canvas");
+        var temp_canvas = document.getElementById("secondary_canvas");
         //var temp_canvas = document.getElementById(this.canvasid);
         temp_canvas.width = curr_file.rows;
         temp_canvas.height = curr_file.rows;
@@ -280,6 +284,11 @@ function DcmApp(canvasid) {
 
     this.set_clut = function(clutname) {
         switch(clutname) {
+            case "Plain":
+                this.curr_clut_r = plain_red;
+                this.curr_clut_g = plain_green;
+                this.curr_clut_b = plain_blue;
+                break;
             case "Rainbow":
                 this.curr_clut_r = rainbow_red;
                 this.curr_clut_g = rainbow_green;
