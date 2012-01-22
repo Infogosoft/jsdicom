@@ -1,3 +1,4 @@
+<!DOCTYPE HTML>
 <html>
 
 <head>
@@ -20,6 +21,7 @@
     <script type="text/javascript" src="js/dcmfile.js"></script>
     <script type="text/javascript" src="js/dicomparser.js"></script>
     <script type="text/javascript" src="js/transfersyntax.js"></script>
+    <script type="text/javascript" src="js/presentation.js"></script>
     <script type="text/javascript">
 
     var ww = 100.0;
@@ -85,16 +87,24 @@
         });
 
         $("#butt-measure").click(function() {
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
             app.activate_measure_tool();
         });
 
         $("#butt-windowing").click(function() {
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
             app.activate_window_level_tool();
         });
         $("#butt-zooming").click(function() {
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
             app.activate_zooming();
         });
         $("#butt-panning").click(function() {
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
             app.activate_panning();
         });
         $("#clut-select").change(function() {
@@ -109,33 +119,29 @@
     </script>
 </head>
 <body>
-    <div id="toolbox">
-        <h1>Tools</h1>
-        <div class="tool-group">
-            <button id="butt-measure">Measure 1</button>
-            <button id="butt-windowing">Windowing</button>
-            <button id="butt-zooming">Zoom</button>
-            <button id="butt-panning">Pan</button>
+    <div id="filebox" class="box">
+        <h2>File browser</h2>
+        <div class="box-content">
+            <div id="open" class="tool-button">Open</div>
+            <ul id="series-selection"></ul>
         </div>
-        <select id="clut-select">
-            <optgroup label="CLUT">
-                <option value="Plain">Plain</option>
-                <option value="Rainbow">Rainbow</option>
-                <option value="Blackbody">Blackbody</option>
-            </optgroup>
-        </select>
-        <select id="window-presets">
-            <optgroup label="Window presets">
-            </optgroup>
-        </select>
-        <ul id="series-selection">
-        </ul>
     </div>
-    <div id="canvas-holder">
-        <div id="toolbar" class="ui-widget-header ui-corner-all">
-            <button id="open">Open</button>
-            <button id="test-scroll">Slide through</button>
-            <button id="view-metadata">View metadata</button>
+    <div id="canvas-holder" class="box">
+        <h2>Viewer</h2>
+        <div id="viewer-bar">
+            <div id="test-scroll" class="tool-button">Slide through</div>
+            <div id="view-metadata" class="tool-button">View metadata</div>
+            <select id="clut-select">
+                <optgroup label="CLUT">
+                    <option value="Plain">Plain</option>
+                    <option value="Rainbow">Rainbow</option>
+                    <option value="Blackbody">Blackbody</option>
+                </optgroup>
+            </select>
+            <select id="window-presets">
+                <optgroup label="Window presets">
+                </optgroup>
+            </select>
         </div>
 
         <div id="slider-holder">
@@ -145,12 +151,23 @@
         <canvas id="secondary_canvas" width="512" height="512" style="display: none;"></canvas>
     </div>
     <div id="right-sidebar">
-        <div id="dicomheader"></div>
-        <div id="info" >
-	  Density: <div id="density"/>
-	</div>
-        <ul id="loglist">
-        </ul>
+        <div id="tool-box" class="box">
+            <h2>Tools</h2>
+            <div id="button-bar-vert">
+                <div id="butt-measure" class="tool-button">Measure 1</div>
+                <div id="butt-windowing" class="tool-button">Windowing</div>
+                <div id="butt-zooming" class="tool-button">Zoom</div>
+                <div id="butt-panning" class="tool-button">Pan</div>
+            </div>
+        </div>
+        <div style="clear: both;"></div>
+        <div class="box">
+            <h2>Data</h2>
+            <div id="dicomheader"></div>
+            <div id="info" >
+              Density: <div id="density"></div>
+            </div>
+        </div>
     </div>
     <!-- Dialogs -->
     <div id="open-dialog" class="hidden" title="Open files" style="display: none;">

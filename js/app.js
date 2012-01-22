@@ -120,27 +120,8 @@ function DcmApp(canvasid) {
 
 
     this.setup_series_selection = function() {
-        var app = this;
-        var series_list = $("#series-selection");
-        series_list.empty();
-        for(var uid in this.series) {
-            instance_number_sort(this.series[uid].files);
-            var item = $("<li>").text(this.series[uid].seriesDescription);
-            item.addClass('series-link');
-            if(uid == this.curr_serie_uid) {
-                item.addClass('series-selected');
-            }
-            item.click((function(u) {
-                return function() {
-                    series_list.find("li").removeClass('series-selected');
-                    $(this).addClass('series-selected');
-                    app.set_serie(u);
-                }
-            })(uid));
-            series_list.append(item);
-        }
+        fill_serie_selection(this.series, this.curr_serie_uid);
         this.set_serie(this.curr_serie_uid);
-
     }
 
     this.set_serie = function(series_uid) {
@@ -159,9 +140,16 @@ function DcmApp(canvasid) {
             // TODO: Set to some default based on modality?
         }
         this.curr_file_idx = 0;
+        this.clear_image();
         this.draw_image();
     }
 
+    this.clear_image = function() {
+        var canvas = document.getElementById(this.canvasid);
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, 512, 512);
+
+    }
     this.draw_image = function() {
         var curr_file = this.files[this.curr_file_idx];
         if(curr_file == undefined)
