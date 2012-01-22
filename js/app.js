@@ -212,25 +212,7 @@ function DcmApp(canvasid) {
     this.fill_metadata_table = function() {
         if(this.files.length == 0)
             return;
-        var file = this.files[this.curr_file_idx];
-        for(var i=0;i<file.data_elements.length;++i) {
-            var element = file.data_elements[i];
-            var tag = $("<td>").html(tag_repr(element.tag));
-            var dictmatch = dcmdict[element.tag];
-            var name = $("<td>").html("unknown");
-            if(dictmatch != undefined)
-                var name = $("<td>").html(dcmdict[element.tag][1]);
-            var value = $("<td>").html('N/A');
-            var val = element.get_repr();
-            if(val != undefined) {
-                var value = $("<td>").html(element.get_repr());
-            }
-
-            var tr = $("<tr>").append(tag).append(name).append(value);
-            if(i%2 == 0)
-                tr.addClass("even");
-            $("#metadata-table tbody").append(tr);
-        }
+        fill_metadata_table(this.files[this.curr_file_idx]);
     }
 
     this.activate_measure_tool = function() { 

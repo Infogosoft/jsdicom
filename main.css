@@ -36,27 +36,43 @@ body {
 .box-content {
     padding: 10px;
 }
+
 #right-sidebar {
     float:left;
     width: 180px;
 }
 
+
+#button-bar-horz > .tool-button:first-child {
+    border-radius: 4px 0px 0px 4px;
+    float: left;
+}
+
+#button-bar-horz > .tool-button:last-child {
+    border-radius: 0px 4px 4px 0px;
+    margin-left: 0px;
+    float: left;
+}
+
 #button-bar-vert {
     margin: 20px;
 }
+
 #button-bar-vert > .tool-button:first-child {
     border-radius: 4px 4px 0px 0px;
 }
+
 #button-bar-vert > .tool-button:last-child {
     border-radius: 0px 0px 4px 4px;
 }
+
 #button-bar-vert > .tool-button {
     margin-top: 0px;
     border-radius: 0px 0px 0px 0px;
 }
 
 .tool-button { 
-    background: #eee;
+    background: -moz-linear-gradient(top, #ccc 40%, #eee 60%);
     border: 1px solid #aaa;
     border-radius: 2px 2px 2px 2px;
     width: 90px;
@@ -68,11 +84,13 @@ body {
     margin-left: 5px;
     margin-top: 2px;
 }
+
 .tool-button:hover { 
     background: #fff;
     cursor: pointer;
 
 }
+
 .butt-selected {
     background: #fff;
 }
@@ -88,6 +106,7 @@ body {
     /*padding: 20px;*/
     float: left;
     width: 540px;
+    height: 612px;
 }
 
 #dicomheader {
@@ -110,8 +129,6 @@ td {
 
 #viewer-bar >select {
     float:left;
-    font-size: 15px;
-    height: 26px;
     margin-left: 7px;
     margin-top: 1px;
 }
@@ -136,6 +153,7 @@ td {
 #metadata-table {
     font-size: 10px;
     height: 500px;
+    width: 536px;
     display: block;
     overflow: auto;
 }
@@ -189,3 +207,48 @@ tr.even {
     margin: 13px;
     border: 1px solid #aaa;
 }
+
+#dropbox {
+    font-size: 12pt;
+    border: 1px dotted black;
+    margin: 4px;
+    padding: 4px;
+    padding-top: 50px;
+    padding-left: 20px;
+    border-radius: 5px 5px 5px 5px;
+    height: 80px;
+
+}
+
+/* Transition stuffs */
+.flipper .front {
+    -moz-backface-visibility: hidden;
+    -moz-transform: rotateY(0deg);
+    /*-moz-transform-style: preserve-3d;*/
+    -moz-transition: all 0.4s ease-in-out 0s;
+    background: none repeat scroll 0 0 #6B7077;
+    border: 1px solid #CCCCCC;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.9);
+    height: inherit;
+    position: absolute;
+    z-index: 900;
+}
+.flipper.flipped .front {
+    -moz-transform: rotateY(180deg);
+}
+
+.flipper .back {
+    -moz-backface-visibility: hidden;
+    -moz-transform: rotateY(-180deg);
+    -moz-transition: all 0.4s ease-in-out 0s;
+    border: 1px solid #CCCCCC;
+    float: none;
+    height: inherit;
+    position: absolute;
+    z-index: 800;
+}
+
+.flipper.flipped .back {
+    -moz-transform: rotateY(0deg);
+}
+
