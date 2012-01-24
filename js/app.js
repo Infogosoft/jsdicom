@@ -159,37 +159,9 @@ function DcmApp(canvasid) {
         temp_canvas.width = curr_file.rows;
         temp_canvas.height = curr_file.rows;
         var c = temp_canvas.getContext("2d");
-        var imageData = c.createImageData(curr_file.columns, curr_file.rows);
-        
-        for(var row=0;row<curr_file.rows;++row) {
-            for(var col=0;col<curr_file.columns;++col) {
-                var data_idx = (col + row*curr_file.columns)*2;
-                var intensity = curr_file.pixel_data[data_idx+1]*256.0 + curr_file.pixel_data[data_idx];
-                intensity = intensity * curr_file.rescaleSlope + curr_file.rescaleIntercept;
-                var lower_bound = app.wl - app.ww/2.0;
-                var upper_bound = app.wl + app.ww/2.0;
-                var intensity = (intensity - lower_bound)/(upper_bound - lower_bound);
-                if(intensity < 0.0)
-                    intensity = 0.0;
-                if(intensity > 1.0)
-                    intensity = 1.0;
-
-
-                intensity *= 255.0;
-
-                var canvas_idx = (col + row*curr_file.columns)*4;
-                var rounded_intensity = Math.round(intensity);
-                imageData.data[canvas_idx] = this.curr_clut_r[rounded_intensity];
-                imageData.data[canvas_idx+1] = this.curr_clut_g[rounded_intensity];
-                imageData.data[canvas_idx+2] = this.curr_clut_b[rounded_intensity];
-                imageData.data[canvas_idx+3] = 0xFF;
-            }
-        }
-
-        c.putImageData(imageData, 0, 0);
-        //c.strokeStyle = 'white';
-        //c.strokeText("WL: " + this.wl, 5, 20);
-        //c.strokeText("WW: " + this.ww, 5, 40);
+        draw_to_canvas(curr_file, c, app.ww, app.wl, this.curr_clut_r, 
+                                                     this.curr_clut_g,
+                                                     this.curr_clut_b);
         
         // Call current tool for post draw operations
         this.curr_tool.postdraw(c);

@@ -199,8 +199,13 @@ tr.even {
     cursor: pointer;
 }
 
-.series-selected {
+.series-link > canvas{
+    margin: 10px;
+}
+.series-selected > canvas {
     font-weight: bold;
+    border: 1px solid #fff;
+    box-shadow: 0 0 8px;
 }
 
 #c1 {
@@ -224,7 +229,6 @@ tr.even {
 .flipper .front {
     -moz-backface-visibility: hidden;
     -moz-transform: rotateY(0deg);
-    /*-moz-transform-style: preserve-3d;*/
     -moz-transition: all 0.4s ease-in-out 0s;
     background: none repeat scroll 0 0 #6B7077;
     border: 1px solid #CCCCCC;
@@ -232,6 +236,7 @@ tr.even {
     height: inherit;
     position: absolute;
     z-index: 900;
+    perspective: 150px;
 }
 .flipper.flipped .front {
     -moz-transform: rotateY(180deg);
@@ -241,11 +246,14 @@ tr.even {
     -moz-backface-visibility: hidden;
     -moz-transform: rotateY(-180deg);
     -moz-transition: all 0.4s ease-in-out 0s;
+    -moz-transform-style: preserve-3d;
+    -moz-transform-origin: 100% 100%;
     border: 1px solid #CCCCCC;
     float: none;
     height: inherit;
     position: absolute;
     z-index: 800;
+    perspective: 150px;
 }
 
 .flipper.flipped .back {
