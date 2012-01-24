@@ -32,8 +32,8 @@ DicomModel.modalities = {
 }
 
 DicomModel.parseFile = function(file) {
-    var sopInstanceUID = file.get_element(0x00080018).get_value();
-    var modality = file.get_element(0x00080060).get_value();
+    var sopInstanceUID = file.get_element(dcmdict.SOPInstanceUID).get_value();
+    var modality = file.get_element(dcmdict.Modality).get_value();
     var obj = DicomModel.modalities[modality](file);
     DicomModel.sopInstanceUIDs[sopInstanceUID] = obj;
     return obj;
@@ -46,24 +46,32 @@ DicomModel.Patient = function(files) {
 
 DicomModel.Study = function(files) {
     this.series = []
-}
-
-DicomModel.Series = function(files) {
-    this.files = files;
-    this.frameOfReference = this.files[0].get_element(0x00200052).get_value();
-
-    var verifySame = function(tag) {
-        return this.files.every(function(file) { return file.get_element(0x00200052).get_value() == this.files[0].ge_element(tag); });
-    }
-        
-    // All files in a series must have some attribute values in common:
-    if(!verifySame(0x00200052) || // FrameOfReferenceUID
-       !verifySame(0x0020000E) || // SeriesInstanceUID
-       !verifySame(0x00080060)) // Modality
+    if(!_verifySame(dcmdict.StudyInstanceUID))
     {
         alert("Broken series instantiation!");
         return;
     }
+
+    this.studyInstanceUID = this.files[0].get_element(dcmdict.FrameOfReferenceUID).get_value();
+}
+
+DicomModel._verifySame = function(files, tag) {
+    return files.every(function(file) { return file.get_element(tag).get_value() == files[0].ge_element(tag); });
+}
+
+DicomModel.Series = function(files) {
+    this.files = files;
+        
+    // All files in a series must have some attribute values in common:
+    if(!_verifySame(dcmdict.FrameOfReferenceUID) || 
+       !_verifySame(dcmdict.SeriesInstanceUID) || 
+       !_verifySame(dcmdict.Modality))
+    {
+        alert("Broken series instantiation!");
+        return;
+    }
+
+    this.frameOfReference = this.files[0].get_element(dcmdict.FrameOfReferenceUID).get_value();
 
     this.addImages = function(images) {
         

@@ -61,21 +61,9 @@ DicomParser.prototype.parse_file = function() {
 
     // Parse File Meta Information
     while(offset < meta_element_end) {
-        tag = this.read_tag(offset);
-        offset += 4;
-        vr = this.read_VR(offset);
-        if(vr == "OB" || vr == "OF" || vr == "SQ" || vr == "OW" || vr == "UN") { 
-            offset += 4;
-            vl = this.read_number(offset, 4);
-            offset += 4;
-        } else {
-            offset += 2;
-            vl = this.read_number(offset, 2);
-            offset += 2;
-        }
-        var meta_element = new DataElement(tag, vr, vl, this.buffer.subarray(offset, offset+vl));
+        var meta_element = new DataElement();
+        offset = meta_element_reader.read_element(this.buffer, offset, meta_element);
         file.meta_elements.push(meta_element);
-        offset += vl;
     }
 
     var transfer_syntax = file.get_meta_element(0x00020010).get_value();
@@ -88,23 +76,6 @@ DicomParser.prototype.parse_file = function() {
         var data_element = new DataElement();
         offset = element_reader.read_element(this.buffer, offset, data_element);
         file.data_elements.push(data_element);
-        continue;
-        tag = this.read_tag(offset);
-        offset += 4;
-        vr = this.read_VR(offset);
-        if(vr == "OB" || vr == "OF" || vr == "SQ" || vr == "OW" || vr == "UN") { 
-            offset += 4;
-            vl = this.read_number(offset, 4);
-            offset += 4;
-        } else {
-            offset += 2;
-            vl = this.read_number(offset, 2);
-            offset += 2;
-        }
-        var data_element = new DataElement(tag, vr, vl, this.buffer.subarray(offset, offset+vl));
-        log_element(element_repr(data_element));
-        file.data_elements.push(data_element);
-        offset += vl;
     }
     return file;
 }

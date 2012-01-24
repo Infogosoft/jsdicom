@@ -77,6 +77,7 @@ function element_reader(tag_reader, number_reader, implicit) {
             }
         }
         
+        //element = {};
         element.tag = tag;
         element.vr = vr;
         if (vl == 0xffffffff)
@@ -117,3 +118,5 @@ function get_element_reader(transfersyntaxUID) {
     }
     return;
 }
+
+meta_element_reader = get_element_reader("1.2.840.10008.1.2.1");
