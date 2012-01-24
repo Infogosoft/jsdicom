@@ -1,27 +1,112 @@
 body {
     font-size: 10px;
-    font-family: Verdana,Arial,sans-serif;
+    font-family: Arial,sans-serif;
+    margin: 0px
 }
 
-td {
-    padding:0;
-    margin:0;
+#filebox {
+    float: left;
+    width: 173px;
+}
+
+.box h2 {
+    -moz-border-bottom-colors: none;
+    background: -moz-linear-gradient(center top , #829AA8, #405A6A) repeat scroll 0 0 transparent;
+    border-color: #677C89 #677C89 #6B808D;
+    border-radius: 5px 5px 0 0;
+    border-style: solid;
+    border-width: 1px;
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0;
+    padding: 3px 13px;
+    position: relative;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.7);
+}
+
+.box {
+    margin: 10px;
+    background: none repeat scroll 0 0 #F5F5F5;
+    border: 1px solid #AAAAAA;
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05) inset;
+}
+
+.box-content {
+    padding: 10px;
 }
 
 #right-sidebar {
     float:left;
-    width: 400px;
+    width: 180px;
 }
+
+
+#button-bar-horz > .tool-button:first-child {
+    border-radius: 4px 0px 0px 4px;
+    float: left;
+}
+
+#button-bar-horz > .tool-button:last-child {
+    border-radius: 0px 4px 4px 0px;
+    margin-left: 0px;
+    float: left;
+}
+
+#button-bar-vert {
+    margin: 20px;
+}
+
+#button-bar-vert > .tool-button:first-child {
+    border-radius: 4px 4px 0px 0px;
+}
+
+#button-bar-vert > .tool-button:last-child {
+    border-radius: 0px 0px 4px 4px;
+}
+
+#button-bar-vert > .tool-button {
+    margin-top: 0px;
+    border-radius: 0px 0px 0px 0px;
+}
+
+.tool-button { 
+    background: -moz-linear-gradient(top, #ccc 40%, #eee 60%);
+    border: 1px solid #aaa;
+    border-radius: 2px 2px 2px 2px;
+    width: 90px;
+    height: 20px;
+    font-size: 12px;
+    text-align: center;
+    padding-top: 2px;
+    font-weight: bold;
+    margin-left: 5px;
+    margin-top: 2px;
+}
+
+.tool-button:hover { 
+    background: #fff;
+    cursor: pointer;
+
+}
+
+.butt-selected {
+    background: #fff;
+}
+
 #slider-holder {
     width:512px;
     margin-bottom: 10px;
     padding-right: 10px;
     padding-left: 10px;
 }
+
 #canvas-holder {
-    padding: 20px;
+    /*padding: 20px;*/
     float: left;
-    width: 600px;
+    width: 540px;
+    height: 612px;
 }
 
 #dicomheader {
@@ -29,10 +114,23 @@ td {
     color: #3f3;
 }
 
-#toolbar {
+td {
+    padding:0;
+    margin:0;
+}
+#viewer-bar {
     width: 512px;
     height: 25px;
     margin-bottom: 10px;
+}
+#viewer-bar > div {
+    float:left;
+}
+
+#viewer-bar >select {
+    float:left;
+    margin-left: 7px;
+    margin-top: 1px;
 }
 
 #axial-view {
@@ -55,6 +153,7 @@ td {
 #metadata-table {
     font-size: 10px;
     height: 500px;
+    width: 536px;
     display: block;
     overflow: auto;
 }
@@ -68,7 +167,7 @@ tr.even {
     background: #eee;
 }
 
-#toolbox {
+#tool-box {
     float: left;
     width: 150px;
 }
@@ -83,10 +182,81 @@ tr.even {
     margin: 0px;
 }
 
+#series-selection {
+    min-height: 200px;
+    border: 1px solid #aaa;
+    list-style:none;
+    padding: 0px;
+}
+
+#series-selection > li {
+    margin: 0px;
+    padding: 0px;
+}
+
+
 .series-link {
     cursor: pointer;
 }
 
-.series-selected {
-    font-weight: bold;
+.series-link > canvas{
+    margin: 10px;
 }
+.series-selected > canvas {
+    font-weight: bold;
+    border: 1px solid #fff;
+    box-shadow: 0 0 8px;
+}
+
+#c1 {
+    margin: 13px;
+    border: 1px solid #aaa;
+}
+
+#dropbox {
+    font-size: 12pt;
+    border: 1px dotted black;
+    margin: 4px;
+    padding: 4px;
+    padding-top: 50px;
+    padding-left: 20px;
+    border-radius: 5px 5px 5px 5px;
+    height: 80px;
+
+}
+
+/* Transition stuffs */
+.flipper .front {
+    -moz-backface-visibility: hidden;
+    -moz-transform: rotateY(0deg);
+    -moz-transition: all 0.4s ease-in-out 0s;
+    background: none repeat scroll 0 0 #6B7077;
+    border: 1px solid #CCCCCC;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.9);
+    height: inherit;
+    position: absolute;
+    z-index: 900;
+    perspective: 150px;
+}
+.flipper.flipped .front {
+    -moz-transform: rotateY(180deg);
+}
+
+.flipper .back {
+    -moz-backface-visibility: hidden;
+    -moz-transform: rotateY(-180deg);
+    -moz-transition: all 0.4s ease-in-out 0s;
+    -moz-transform-style: preserve-3d;
+    -moz-transform-origin: 100% 100%;
+    border: 1px solid #CCCCCC;
+    float: none;
+    height: inherit;
+    position: absolute;
+    z-index: 800;
+    perspective: 150px;
+}
+
+.flipper.flipped .back {
+    -moz-transform: rotateY(0deg);
+}
+

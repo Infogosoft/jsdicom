@@ -40,7 +40,8 @@ DicomParser.prototype.parse_file = function() {
     var magicword = this.read_string(128, 4);
     if(magicword != "DICM")
     {
-        log("DICM key NOT found, aborting");
+        //log("DICM key NOT found, aborting");
+        console.log("no magic word found");
         return;
     }
     // File Meta Information should always use Explicit VR Little Endian(1.2.840.10008.1.2.1)

@@ -1,3 +1,4 @@
+<!DOCTYPE HTML>
 <html>
 
 <head>
@@ -20,6 +21,7 @@
     <script type="text/javascript" src="js/dcmfile.js"></script>
     <script type="text/javascript" src="js/dicomparser.js"></script>
     <script type="text/javascript" src="js/transfersyntax.js"></script>
+    <script type="text/javascript" src="js/presentation.js"></script>
     <script type="text/javascript">
 
     var ww = 100.0;
@@ -57,15 +59,15 @@
 
         $("#view-metadata").click(function() {
             app.fill_metadata_table();
-            $("#metadata-dialog").dialog({
-                modal: true,
-                width: 600,
-                button: {
-                    'Ok': function() {
-                        $(this).dialog('close');
-                    }
-                }
-            });
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
+            $(".flipper").addClass("flipped");
+        });
+
+        $("#view-image").click(function() {
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
+            $(".flipper").removeClass("flipped");
         });
 
         $("#open").click(function() {
@@ -85,16 +87,24 @@
         });
 
         $("#butt-measure").click(function() {
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
             app.activate_measure_tool();
         });
 
         $("#butt-windowing").click(function() {
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
             app.activate_window_level_tool();
         });
         $("#butt-zooming").click(function() {
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
             app.activate_zooming();
         });
         $("#butt-panning").click(function() {
+            $(this).parent().find("div").removeClass("butt-selected");
+            $(this).addClass("butt-selected");
             app.activate_panning();
         });
         $("#clut-select").change(function() {
@@ -103,54 +113,96 @@
         $("#window-presets").change(function() {
             app.set_window_preset($(this).val());
         });
+        function handleDragOver(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+        }
+        function handleFileSelect(evt) {
+            evt.stopPropagation();
+            evt.preventDefault();
+            app.load_files(evt.dataTransfer.files);
+        }
 
+        // Setup the dnd listeners.
+        var dropZone = document.getElementById('dropbox');
+        dropZone.addEventListener('dragover', handleDragOver, false);
+        dropZone.addEventListener('drop', handleFileSelect, false);
     });
 
     </script>
 </head>
 <body>
-    <div id="toolbox">
-        <h1>Tools</h1>
-        <div class="tool-group">
-            <button id="butt-measure">Measure 1</button>
-            <button id="butt-windowing">Windowing</button>
-            <button id="butt-zooming">Zoom</button>
-            <button id="butt-panning">Pan</button>
+    <div id="filebox" class="box">
+        <h2>File browser</h2>
+        <div class="box-content">
+            <div id="open" class="tool-button">Open</div>
+            <ul id="series-selection"></ul>
         </div>
-        <select id="clut-select">
-            <optgroup label="CLUT">
-                <option value="Plain">Plain</option>
-                <option value="Rainbow">Rainbow</option>
-                <option value="Blackbody">Blackbody</option>
-            </optgroup>
-        </select>
-        <select id="window-presets">
-            <optgroup label="Window presets">
-            </optgroup>
-        </select>
-        <ul id="series-selection">
-        </ul>
     </div>
-    <div id="canvas-holder">
-        <div id="toolbar" class="ui-widget-header ui-corner-all">
-            <button id="open">Open</button>
-            <button id="test-scroll">Slide through</button>
-            <button id="view-metadata">View metadata</button>
+    <div id="canvas-holder" class="box">
+        <h2>Viewer</h2>
+        <div id="viewer-bar">
+            <div id="button-bar-horz">
+                <div id="view-image" class="tool-button butt-selected">Image</div>
+                <div id="view-metadata" class="tool-button">Metadata</div>
+            </div>
+            <div id="test-scroll" class="tool-button">Slide through</div>
+            <select id="clut-select">
+                <optgroup label="CLUT">
+                    <option value="Plain">Plain</option>
+                    <option value="Rainbow">Rainbow</option>
+                    <option value="Blackbody">Blackbody</option>
+                </optgroup>
+            </select>
+            <select id="window-presets">
+                <optgroup label="Window presets">
+                </optgroup>
+            </select>
         </div>
 
         <div id="slider-holder">
             <div id="slider"></div>
         </div>
-        <canvas id="c1" width="512" height="512"></canvas>
-        <canvas id="secondary_canvas" width="512" height="512" style="display: none;"></canvas>
+        <div class="flipper">
+            <canvas id="c1" width="512" height="512" class="front"></canvas>
+            <div class="back">
+                <table id="metadata-table">
+                    <thead>
+                        <tr>
+                            <td width="15%">Tag</td>
+                            <td width="40%">Name</td>
+                            <td width="35%">Value</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
     <div id="right-sidebar">
-        <div id="dicomheader"></div>
-        <div id="info" >
-	  Density: <div id="density"/>
-	</div>
-        <ul id="loglist">
-        </ul>
+        <div id="tool-box" class="box">
+            <h2>Tools</h2>
+            <div id="button-bar-vert">
+                <div id="butt-measure" class="tool-button">Measure</div>
+                <div id="butt-windowing" class="tool-button butt-selected">Windowing</div>
+                <div id="butt-zooming" class="tool-button">Zoom</div>
+                <div id="butt-panning" class="tool-button">Pan</div>
+            </div>
+        </div>
+        <div style="clear: both;"></div>
+        <div class="box">
+            <h2>Data</h2>
+            <div id="dicomheader"></div>
+            <div id="info" >
+              Density: <div id="density"></div>
+            </div>
+        </div>
+        <div class="box">
+            <h2>Dropbox</h2>
+            <p id="dropbox" class="infotext">Drop files here</p>
+        </div>
     </div>
     <!-- Dialogs -->
     <div id="open-dialog" class="hidden" title="Open files" style="display: none;">
@@ -160,18 +212,6 @@
             <input type="file" name="file" id="file" multiple="multiple"/>
         </form>
     </div>
-    <div id="metadata-dialog" class="hidden" title="Metadata" style="display: none;">
-        <table id="metadata-table" width="100%">
-            <thead>
-                <tr>
-                    <td width="15%">Tag</td>
-                    <td width="40%">Name</td>
-                    <td width="35%">Value</td>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-    </div>
+    <canvas id="secondary_canvas" width="512" height="512" style="display: none;"></canvas>
 </body>
 </html>
