@@ -7,7 +7,9 @@
 // 
 //  * How much should be implemented for now? Can we signal unimplementedness?
 //
-//  * Would we want inheritence? Combining modules -> iods?
+//  * Would we want inheritence? Combining modules -> iods? Probably
+//    not inheritance, use module builders instead, and let iods be a
+//    set of module builders.
 
 
 
