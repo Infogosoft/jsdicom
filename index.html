@@ -6,6 +6,8 @@
     <link rel="stylesheet" type="text/css" href="jquery/css/custom-theme/jquery-ui-1.8.16.custom.css" />
     <link rel="stylesheet" type="text/css" href="main.css" />
 
+    <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="js/webgl.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
 
@@ -22,10 +24,44 @@
     <script type="text/javascript" src="js/dicomparser.js"></script>
     <script type="text/javascript" src="js/transfersyntax.js"></script>
     <script type="text/javascript" src="js/presentation.js"></script>
-    <script type="text/javascript">
+    <script id="shader-fs" type="x-shader/x-fragment">
+    varying highp vec2 vTextureCoord;  
+    uniform sampler2D uSampler;
+    uniform highp float uWW;
+    uniform highp float uWL;
+        
+    void main(void) {  
+        highp vec4 texcolor = texture2D(uSampler, vTextureCoord); 
+        highp float intensity = texcolor.r + texcolor.a*256.0;
+        highp float rescaleIntercept = -1024.0/256.0;
+        highp float rescaleSlope = 1.0;
+        intensity = intensity*rescaleSlope + rescaleIntercept;
+        highp float wl = uWL/256.0;
+        highp float ww = uWW/256.0;
+        highp float lower_bound = wl - ww/2.0;
+        highp float upper_bound = wl + ww/2.0;
+        intensity = (intensity - lower_bound)/(upper_bound - lower_bound);
 
-    var ww = 100.0;
-    var wl = 1000.0;
+        gl_FragColor = vec4(intensity, intensity, intensity, 1.0);
+    }
+
+    </script>
+    <script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+
+    varying highp vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+
+    </script>
+    <script type="text/javascript">
 
     var app = new DcmApp('c1');
 
@@ -128,6 +164,7 @@
         var dropZone = document.getElementById('dropbox');
         dropZone.addEventListener('dragover', handleDragOver, false);
         dropZone.addEventListener('drop', handleFileSelect, false);
+        webGLStart();
     });
 
     </script>

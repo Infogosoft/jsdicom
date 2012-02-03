@@ -145,15 +145,17 @@ function DcmApp(canvasid) {
     }
 
     this.clear_image = function() {
-        var canvas = document.getElementById(this.canvasid);
-        var ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, 512, 512);
+        //var canvas = document.getElementById(this.canvasid);
+        //var ctx = canvas.getContext('2d');
+        //ctx.clearRect(0, 0, 512, 512);
 
     }
     this.draw_image = function() {
         var curr_file = this.files[this.curr_file_idx];
         if(curr_file == undefined)
             return;
+        draw_to_gl(curr_file, app.ww, app.wl);
+        return;
         var temp_canvas = document.getElementById("secondary_canvas");
         //var temp_canvas = document.getElementById(this.canvasid);
         temp_canvas.width = curr_file.rows;

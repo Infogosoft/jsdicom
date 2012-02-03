@@ -5,8 +5,8 @@ var pMatrix = mat4.create();
 var squareVertexPositionBuffer;
 var vertexIndexBuffer;
 var THE_TEXTURE;
-var ww = 200;
-var wl = 40;
+var gl_WW = 200;
+var gl_WL = 40;
 
 function initGL(canvas) {
     try {
@@ -93,8 +93,8 @@ function setMatrixUniforms() {
 }
 
 function setWindowUniforms() {
-    gl.uniform1f(shaderProgram.wlUniform, wl);
-    gl.uniform1f(shaderProgram.wwUniform, ww);
+    gl.uniform1f(shaderProgram.wlUniform, gl_WL);
+    gl.uniform1f(shaderProgram.wwUniform, gl_WW);
 }
 
 function initBuffers() {
@@ -136,20 +136,7 @@ function initBuffers() {
     vertexIndexBuffer.numItems = 6;
 }
 
-function initTexture() {
-    var rgbconverted = new Uint8Array(512*512*3);
-    //for(var i=0; i<rgbconverted.length;++i) {
-    //    rgbconverted[i] = Math.round(Math.random()*256);
-   // }
-    for(var i=0; i<pixel_data.length;i+=2) {
-        var val = pixel_data[i+1]*256.0 + pixel_data[i];
-        fval = val / 3000.0;
-        if(i%1000 == 0)
-            var foo;
-        rgbconverted[(i/2)*3] = fval;
-        rgbconverted[(i/2)*3+1] = fval;
-        rgbconverted[(i/2)*3+2] = fval;
-    }
+function updateTexture(pixel_data) {
     THE_TEXTURE = gl.createTexture(); 
     gl.bindTexture(gl.TEXTURE_2D, THE_TEXTURE);  
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -166,7 +153,6 @@ function initTexture() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
                   
     gl.bindTexture(gl.TEXTURE_2D, null);
-
 }
 
 var zdist = -3.0;
@@ -201,11 +187,11 @@ function drawScene() {
 }
 
 function webGLStart() {
-    var canvas = document.getElementById("glcanvas");
+    var canvas = document.getElementById("c1");
     initGL(canvas);
     initShaders();
     initBuffers();
-    initTexture();
+    updateTexture([]);
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
 

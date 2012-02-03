@@ -51,6 +51,12 @@ function fill_metadata_table(file) {
     }
 }
 
+function draw_to_gl(file, ww, wl) {
+    gl_WW=ww;
+    gl_WL=wl;
+    updateTexture(file.pixel_data);
+    drawScene();
+}
 function draw_to_canvas(file, ctx, ww, wl, clut_r, clut_g, clut_b) {
     var imageData = ctx.createImageData(file.columns, file.rows);
     
