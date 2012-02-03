@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>DICOM</title>
+
+    <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="js/webgl.js"></script>
+    <script type="text/javascript" src="jquery/js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
+
+    <script type="text/javascript" src="js/dcmdict.js"></script>
+    <script type="text/javascript" src="js/cluts/plain.js"></script>
+    <script type="text/javascript" src="js/cluts/rainbow.js"></script>
+    <script type="text/javascript" src="js/cluts/blackbody.js"></script>
+    <script type="text/javascript" src="js/tools.js"></script>
+    <script type="text/javascript" src="js/binutils.js"></script>
+    <script type="text/javascript" src="js/utilities.js"></script>
+    <script type="text/javascript" src="js/dcmserie.js"></script>
+    <script type="text/javascript" src="js/dcmfile.js"></script>
+    <script type="text/javascript" src="js/dicomparser.js"></script>
+    <script type="text/javascript" src="js/transfersyntax.js"></script>
+    <script type="text/javascript" src="js/presentation.js"></script>
+    <script type="text/javascript" src="js/presentation.js"></script>
+    <script type="text/javascript" src="tests/file_fixtures.js"></script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+    varying highp vec2 vTextureCoord;  
+    uniform sampler2D uSampler;
+        
+    void main(void) {  
+        highp vec4 texcolor = texture2D(uSampler, vTextureCoord); 
+        highp float intensity = texcolor.a*256.0 + texcolor.r;
+        highp float rescaleSlope = -1024.0;
+        highp float rescaleIntercept = 1.0;
+        intensity = intensity*rescaleSlope + rescaleIntercept;
+        highp float ww = 400.0;
+        highp float wl = 20.0;
+        highp float lower_bound = wl - ww/2.0;
+        highp float upper_bound = wl + ww/2.0;
+        intensity = (intensity - lower_bound)/(upper_bound - lower_bound);
+
+        gl_FragColor = vec4(intensity, intensity, intensity, 1.0);
+        //gl_FragColor = vec4(texcolor.x, texcolor.y, texcolor.z, 1.0);
+
+      //gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+      //gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+    }  
+    //
+
+    </script>
+    <script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+
+    varying highp vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+
+    </script>
+
+    <script type="text/javascript">
+    var pixel_data;
+    $(document).ready(function() {
+    
+        var filedata = base64_to_typedarray(file1);
+        var parser = new DicomParser(filedata);
+        var file = parser.parse_file();
+        var pn = file.get_element(0x00100010).get_value();
+        pixel_data = file.get_element(0x7fe00010).data;
+        rows = file.get_element(0x00280010).get_value();
+        columns = file.get_element(0x00280011).get_value();
+        console.log(pn);
+        console.log(rows);
+        console.log(columns);
+        webGLStart();
+    });
+    </script>
+
+</head>
+<body>
+    <canvas id="glcanvas" width="512" height="512"></canvas>
+</body>
+</html>
