@@ -27,26 +27,25 @@
     <script id="shader-fs" type="x-shader/x-fragment">
     varying highp vec2 vTextureCoord;  
     uniform sampler2D uSampler;
+    uniform highp float uWW;
+    uniform highp float uWL;
         
     void main(void) {  
         highp vec4 texcolor = texture2D(uSampler, vTextureCoord); 
-        highp float intensity = texcolor.a*256.0 + texcolor.r;
-        highp float rescaleSlope = -1024.0;
-        highp float rescaleIntercept = 1.0;
+        highp float intensity = texcolor.r + texcolor.a*256.0;
+        highp float rescaleIntercept = -1024.0/256.0;
+        highp float rescaleSlope = 1.0;
         intensity = intensity*rescaleSlope + rescaleIntercept;
-        highp float ww = 400.0;
-        highp float wl = 20.0;
+        highp float wl = uWL/256.0;
+        highp float ww = uWW/256.0;
+        //highp float wl = 700.0/256.0;
+        //highp float ww = 3200.0/256.0;
         highp float lower_bound = wl - ww/2.0;
         highp float upper_bound = wl + ww/2.0;
         intensity = (intensity - lower_bound)/(upper_bound - lower_bound);
 
         gl_FragColor = vec4(intensity, intensity, intensity, 1.0);
-        //gl_FragColor = vec4(texcolor.x, texcolor.y, texcolor.z, 1.0);
-
-      //gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-      //gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
     }  
-    //
 
     </script>
     <script id="shader-vs" type="x-shader/x-vertex">
