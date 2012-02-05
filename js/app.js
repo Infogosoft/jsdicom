@@ -154,32 +154,9 @@ function DcmApp(canvasid) {
         var curr_file = this.files[this.curr_file_idx];
         if(curr_file == undefined)
             return;
-        draw_to_gl(curr_file, app.ww, app.wl);
-        return;
-        var temp_canvas = document.getElementById("secondary_canvas");
-        //var temp_canvas = document.getElementById(this.canvasid);
-        temp_canvas.width = curr_file.rows;
-        temp_canvas.height = curr_file.rows;
-        var c = temp_canvas.getContext("2d");
-        draw_to_canvas(curr_file, c, app.ww, app.wl, this.curr_clut_r, 
-                                                     this.curr_clut_g,
-                                                     this.curr_clut_b);
-        
-        // Call current tool for post draw operations
-        this.curr_tool.postdraw(c);
-        this.refreshmousemoveinfo();
-        var canvas = document.getElementById(this.canvasid);
-        var ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, curr_file.rows, curr_file.rows);
-        var scaled_width = curr_file.rows*this.scale_factor;
-        var scaled_height = curr_file.columns*this.scale_factor;
-        var offset_x = (curr_file.rows-scaled_width-this.pan[0])/2;
-        var offset_y = (curr_file.columns-scaled_height-this.pan[1])/2;
-        ctx.drawImage(temp_canvas, offset_x, offset_y, scaled_width, scaled_height);
-        //ctx.drawImage(temp_canvas, 0, 0, 512, 512);
-        ctx.strokeStyle = 'white';
-        ctx.strokeText("WL: " + this.wl, 5, 20);
-        ctx.strokeText("WW: " + this.ww, 5, 40);
+        this.painter.set_file(curr_file);
+        this.painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
+        this.painter.draw_image();
     }
 
 
@@ -270,6 +247,9 @@ function DcmApp(canvasid) {
     this.init = function() {
         var canvas = document.getElementById(this.canvasid);
         var app = this;
+        this.painter = new GLPainter();
+        //this.painter = new CanvasPainter();
+        this.painter.init(this.canvasid);
         canvas.onmousemove = function(evt) {
             if (app.curr_tool.mousemove !== undefined)
                 app.curr_tool.mousemove(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);

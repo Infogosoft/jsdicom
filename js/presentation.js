@@ -51,41 +51,6 @@ function fill_metadata_table(file) {
     }
 }
 
-function draw_to_gl(file, ww, wl) {
-    gl_WW=ww;
-    gl_WL=wl;
-    updateTexture(file.pixel_data);
-    drawScene();
-}
-function draw_to_canvas(file, ctx, ww, wl, clut_r, clut_g, clut_b) {
-    var imageData = ctx.createImageData(file.columns, file.rows);
-    
-    for(var row=0;row<file.rows;++row) {
-        for(var col=0;col<file.columns;++col) {
-            var data_idx = (col + row*file.columns)*2;
-            var intensity = file.pixel_data[data_idx+1]*256.0 + file.pixel_data[data_idx];
-            intensity = intensity * file.rescaleSlope + file.rescaleIntercept;
-            var lower_bound = wl - ww/2.0;
-            var upper_bound = wl + ww/2.0;
-            var intensity = (intensity - lower_bound)/(upper_bound - lower_bound);
-            if(intensity < 0.0)
-                intensity = 0.0;
-            if(intensity > 1.0)
-                intensity = 1.0;
-
-            intensity *= 255.0;
-
-            var canvas_idx = (col + row*file.columns)*4;
-            var rounded_intensity = Math.round(intensity);
-            imageData.data[canvas_idx] = clut_r[rounded_intensity];
-            imageData.data[canvas_idx+1] = clut_g[rounded_intensity];
-            imageData.data[canvas_idx+2] = clut_b[rounded_intensity];
-            imageData.data[canvas_idx+3] = 0xFF;
-        }
-    }
-    ctx.putImageData(imageData, 0, 0);
-}
-
 function draw_thumbnail_to_canvas(file, ctx, size) {
     var imageData = ctx.createImageData(size, size);
     // use ww/wl from file

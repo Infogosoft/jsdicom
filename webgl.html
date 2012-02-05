@@ -5,7 +5,7 @@
     <title>DICOM</title>
 
     <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
-    <script type="text/javascript" src="js/webgl.js"></script>
+    <script type="text/javascript" src="js/glpainter.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
 
@@ -69,19 +69,21 @@
         var filedata = base64_to_typedarray(file1);
         var parser = new DicomParser(filedata);
         var file = parser.parse_file();
+        file.pixel_data = file.get_element(0x7fe00010).data;
+        file.rows = file.get_element(0x00280010).get_value();
+        file.columns = file.get_element(0x00280011).get_value();
         var pn = file.get_element(0x00100010).get_value();
-        pixel_data = file.get_element(0x7fe00010).data;
-        rows = file.get_element(0x00280010).get_value();
-        columns = file.get_element(0x00280011).get_value();
-        console.log(pn);
-        console.log(rows);
-        console.log(columns);
-        webGLStart();
+
+        painter = new GLPainter();
+        painter.init("c1");
+        painter.set_file(file);
+        painter.set_windowing(200.0, 40.0);
+        painter.draw_image();
     });
     </script>
 
 </head>
 <body>
-    <canvas id="glcanvas" width="512" height="512"></canvas>
+    <canvas id="c1" width="512" height="512"></canvas>
 </body>
 </html>

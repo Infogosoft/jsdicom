@@ -7,7 +7,8 @@
     <link rel="stylesheet" type="text/css" href="main.css" />
 
     <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
-    <script type="text/javascript" src="js/webgl.js"></script>
+    <script type="text/javascript" src="js/glpainter.js"></script>
+    <script type="text/javascript" src="js/canvaspainter.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
 
@@ -95,15 +96,15 @@
 
         $("#view-metadata").click(function() {
             app.fill_metadata_table();
-            $(this).parent().find("div").removeClass("butt-selected");
-            $(this).addClass("butt-selected");
-            $(".flipper").addClass("flipped");
-        });
-
-        $("#view-image").click(function() {
-            $(this).parent().find("div").removeClass("butt-selected");
-            $(this).addClass("butt-selected");
-            $(".flipper").removeClass("flipped");
+            $("#metadata-dialog").dialog({
+                modal: true,
+                width: 600,
+                button: {
+                    'Ok': function() {
+                        $(this).dialog('close');
+                    }
+                }
+            });
         });
 
         $("#open").click(function() {
@@ -123,9 +124,9 @@
         });
 
         $("#butt-measure").click(function() {
-            $(this).parent().find("div").removeClass("butt-selected");
-            $(this).addClass("butt-selected");
-            app.activate_measure_tool();
+            //$(this).parent().find("div").removeClass("butt-selected");
+            //$(this).addClass("butt-selected");
+            //app.activate_measure_tool();
         });
 
         $("#butt-windowing").click(function() {
@@ -164,7 +165,7 @@
         var dropZone = document.getElementById('dropbox');
         dropZone.addEventListener('dragover', handleDragOver, false);
         dropZone.addEventListener('drop', handleFileSelect, false);
-        webGLStart();
+        //webGLStart();
     });
 
     </script>
@@ -180,10 +181,7 @@
     <div id="canvas-holder" class="box">
         <h2>Viewer</h2>
         <div id="viewer-bar">
-            <div id="button-bar-horz">
-                <div id="view-image" class="tool-button butt-selected">Image</div>
-                <div id="view-metadata" class="tool-button">Metadata</div>
-            </div>
+            <div id="view-metadata" class="tool-button">Metadata</div>
             <div id="test-scroll" class="tool-button">Slide through</div>
             <select id="clut-select">
                 <optgroup label="CLUT">
@@ -201,21 +199,8 @@
         <div id="slider-holder">
             <div id="slider"></div>
         </div>
-        <div class="flipper">
+        <div id="view-area">
             <canvas id="c1" width="512" height="512" class="front"></canvas>
-            <div class="back">
-                <table id="metadata-table">
-                    <thead>
-                        <tr>
-                            <td width="15%">Tag</td>
-                            <td width="40%">Name</td>
-                            <td width="35%">Value</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
         </div>
     </div>
     <div id="right-sidebar">
@@ -250,5 +235,18 @@
         </form>
     </div>
     <canvas id="secondary_canvas" width="512" height="512" style="display: none;"></canvas>
+    <div id="metadata-dialog" class="hidden" title="Metadata" style="display: none;">
+        <table id="metadata-table" width="100%">
+            <thead>
+                <tr>
+                    <td width="15%">Tag</td>
+                    <td width="40%">Name</td>
+                    <td width="35%">Value</td>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
