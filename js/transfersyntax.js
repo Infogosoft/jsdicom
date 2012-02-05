@@ -85,16 +85,24 @@ function element_reader(tag_reader, number_reader, implicit) {
         else
             element.vl = vl;
         element.data = buffer.subarray(offset, offset + element.vl);
+        element.implicit = implicit;
         
         offset += element.vl;
         return offset;
     }
 }
 
+transferSyntaxes = {
+    "LittleEndianImplicit": "1.2.840.10008.1.2",
+    "LittleEndianExplicit": "1.2.840.10008.1.2.1",
+    "BigEndianExplicit": "1.2.840.10008.1.2.2",
+    "DeflatedLittleEndianExplicit": "1.2.840.10008.1.2.1.99"
+}
+
 tag_readers = {
-    "1.2.840.10008.1.2.1": read_tag_LE,
-    "1.2.840.10008.1.2.2": read_tag_BE,
     "1.2.840.10008.1.2": read_tag_LE,
+    "1.2.840.10008.1.2.1": read_tag_LE,
+    "1.2.840.10008.1.2.2": read_tag_BE
     "1.2.840.10008.1.2.4.50": read_tag_LE,
     "1.2.840.10008.1.2.4.51": read_tag_LE,
     "1.2.840.10008.1.2.4.52": read_tag_LE,
@@ -122,9 +130,9 @@ tag_readers = {
 }
 
 is_implicit = {
-    "1.2.840.10008.1.2.1": false,
-    "1.2.840.10008.1.2.2": false,
     "1.2.840.10008.1.2": true,
+    "1.2.840.10008.1.2.1": false,
+    "1.2.840.10008.1.2.2": false
     "1.2.840.10008.1.2.4.50": false,
     "1.2.840.10008.1.2.4.51": false,
     "1.2.840.10008.1.2.4.52": false,
@@ -149,7 +157,14 @@ is_implicit = {
     "1.2.840.10008.1.2.4.91": false,
     "1.2.840.10008.1.2.4.92": false,
     "1.2.840.10008.1.2.4.93": false,
+
 }
+
+is_little_endian = {
+    "1.2.840.10008.1.2": true,
+    "1.2.840.10008.1.2.1": true,
+    "1.2.840.10008.1.2.2": false
+};
 
 number_readers = {
     "1.2.840.10008.1.2": read_number_LE,
