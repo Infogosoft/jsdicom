@@ -137,12 +137,7 @@
         $("#butt-zooming").click(function() {
             $(this).parent().find("div").removeClass("butt-selected");
             $(this).addClass("butt-selected");
-            app.activate_zooming();
-        });
-        $("#butt-panning").click(function() {
-            $(this).parent().find("div").removeClass("butt-selected");
-            $(this).addClass("butt-selected");
-            app.activate_panning();
+            app.activate_zoom_pan();
         });
         $("#clut-select").change(function() {
             app.set_clut($(this).val());
@@ -209,8 +204,7 @@
             <div id="button-bar-vert">
                 <div id="butt-measure" class="tool-button">Measure</div>
                 <div id="butt-windowing" class="tool-button butt-selected">Windowing</div>
-                <div id="butt-zooming" class="tool-button">Zoom</div>
-                <div id="butt-panning" class="tool-button">Pan</div>
+                <div id="butt-zooming" class="tool-button">Zoom/Pan</div>
             </div>
         </div>
         <div style="clear: both;"></div>

@@ -19,11 +19,6 @@ function DcmApp(canvasid) {
 
     this.canvasid = canvasid;
 
-    this.ww = 1000;
-    this.wl = 500;
-    this.scale_factor = 1;
-    this.pan = [0,0];
-
     this.last_mouse_pos = [-1,-1];
     this.mouse_down = false;
 
@@ -144,6 +139,35 @@ function DcmApp(canvasid) {
         this.draw_image();
     }
 
+    this.set_pan = function(panx, pany) {
+        this.painter.set_pan(panx, pany);
+    }
+    this.get_pan = function(pan) {
+        return this.painter.get_pan();
+    }
+    this.set_scale = function(scale) {
+        this.painter.set_scale(scale);
+    }
+    this.get_scale = function(scale) {
+        return this.painter.get_scale();
+    }
+    this.set_windowing = function(ww, wl) {
+        return this.painter.set_windowing(ww, wl);
+    }
+    this.get_windowing = function() {
+        return this.painter.get_windowing();
+    }
+    this.set_slice_idx = function(idx) {
+        if(idx < 0 || idx > this.series[this.curr_serie_uid].files.length - 1)
+            return;
+        this.curr_file_idx = idx;
+        this.draw_image();
+
+    }
+    this.get_slice_idx = function() {
+        return this.curr_file_idx;
+    }
+
     this.clear_image = function() {
         //var canvas = document.getElementById(this.canvasid);
         //var ctx = canvas.getContext('2d');
@@ -176,13 +200,8 @@ function DcmApp(canvasid) {
         this.curr_tool.set_file(this.files[this.curr_file_idx]);
     }
 
-    this.activate_zooming = function() { 
-        this.curr_tool = new ScaleTool(this);
-        this.curr_tool.set_file(this.files[this.curr_file_idx]);
-    }
-
-    this.activate_panning = function() { 
-        this.curr_tool = new PanTool(this);
+    this.activate_zoom_pan = function() { 
+        this.curr_tool = new ZoomPanTool(this);
         this.curr_tool.set_file(this.files[this.curr_file_idx]);
     }
 
@@ -279,5 +298,11 @@ function DcmApp(canvasid) {
             if (app.curr_tool.click !== undefined)
                 app.curr_tool.click(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
         }
+        canvas.addEventListener('DOMMouseScroll', function(evt) {
+            if (app.curr_tool.scroll !== undefined)
+                app.curr_tool.scroll(evt.detail);
+            return false;
+
+        }, false);
     }
 }

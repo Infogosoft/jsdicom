@@ -42,14 +42,22 @@ GLPainter.prototype.set_file = function(dcmfile) {
 
 
 GLPainter.prototype.set_scale = function(scale) {
-    this.scale = scale;
+    this.scale = Math.min(Math.max(scale, 0.1), 10.0);
     this.draw_image();
+}
+
+GLPainter.prototype.get_scale = function(scale) {
+    return this.scale;
 }
 
 GLPainter.prototype.set_pan = function(panx, pany) {
     this.pan[0] = panx;
     this.pan[1] = pany;
     this.draw_image();
+}
+
+GLPainter.prototype.get_pan = function() {
+    return this.pan;
 }
 
 GLPainter.prototype.set_cluts = function(r_clut, g_clut, b_clut) {
@@ -59,6 +67,10 @@ GLPainter.prototype.set_cluts = function(r_clut, g_clut, b_clut) {
 GLPainter.prototype.set_windowing = function(ww, wl) {
     this.ww = ww;
     this.wl = wl;
+    this.draw_image();
+}
+GLPainter.prototype.get_windowing = function(ww, wl) {
+    return [this.ww, this.wl];
 }
 
 GLPainter.prototype.draw_image = function() {

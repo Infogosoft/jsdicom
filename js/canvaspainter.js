@@ -27,6 +27,12 @@ CanvasPainter.prototype.set_windowing = function(ww, wl) {
     this.wl = wl;
 }
 
+CanvasPainter.prototype.set_scale = function(scale) {
+    this.scale = scale;
+}
+CanvasPainter.prototype.get_scale = function(scale) {
+    return this.scale;
+}
 CanvasPainter.prototype.init = function(canvasid) {
     this.canvas = document.getElementById(canvasid);
 }
