@@ -88,6 +88,14 @@ function DcmApp(canvasid) {
                         app.files = app.series[app.curr_serie_uid].files;
                         //app.draw_image();
                     }
+                } else if(file.modality == "US") {
+                    file.pixel_data = file.get_element(0x7fe00010).data;
+                    file.rows = file.get_element(0x00280010).get_value();
+                    file.columns = file.get_element(0x00280011).get_value();
+                    //file.rescaleIntercept = file.get_element(0x00281052).get_value();
+                    //file.rescaleSlope = file.get_element(0x00281053).get_value();
+                    app.files[index] = file;
+
                 } else {
                     app.files[index] = file;
                 }
@@ -158,7 +166,7 @@ function DcmApp(canvasid) {
         return this.painter.get_windowing();
     }
     this.set_slice_idx = function(idx) {
-        if(idx < 0 || idx > this.series[this.curr_serie_uid].files.length - 1)
+        if(idx < 0 || idx > this.files.length - 1)
             return;
         this.curr_file_idx = idx;
         this.draw_image();
@@ -274,7 +282,7 @@ function DcmApp(canvasid) {
                 app.curr_tool.mousemove(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
             app.last_mouse_pos[0] = evt.clientX;
             app.last_mouse_pos[1] = evt.clientY;
-            app.refreshmousemoveinfo();
+            //app.refreshmousemoveinfo();
             return;
         }
 

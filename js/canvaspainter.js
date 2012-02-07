@@ -8,7 +8,7 @@ function CanvasPainter() {
     this.b_clut;
 }
 
-GLPainter.prototype.is_supported = function() {
+CanvasPainter.prototype.is_supported = function() {
     return window.CanvasRenderingContext;
 }
 

@@ -1,3 +1,6 @@
+var FRAG_SHADER_8 = 0;
+var FRAG_SHADER_16 = 1;
+
 function GLPainter() {
     this.gl;
     this.shaderProgram;
@@ -22,20 +25,45 @@ GLPainter.prototype.is_supported = function() {
 }
 
 GLPainter.prototype.set_file = function(dcmfile) {
+    var internalFormat;
+    if(dcmfile.get_element(0x00280101).get_value() <= 8) {
+        internalFormat = this.gl.LUMINANCE;
+        // Change shader?
+        if(this.shaderProgram.activeFragmentShader == FRAG_SHADER_16) {
+            this.shaderProgram.activeFragmentShader = FRAG_SHADER_8;
+            this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShader16bit);
+            this.gl.detachShader(this.shaderProgram, this.shaderProgram.vertexShader);
+            this.set_and_compile_shader(this.shaderProgram.fragmentShader8bit, 
+                                        this.shaderProgram.vertexShader);
+        }
+
+    } else {
+        internalFormat = this.gl.LUMINANCE_ALPHA;
+        if(this.shaderProgram.activeFragmentShader == FRAG_SHADER_8) {
+            this.shaderProgram.activeFragmentShader = FRAG_SHADER_16;
+            this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShader8bit);
+            this.gl.detachShader(this.shaderProgram, this.shaderProgram.vertexShader);
+            this.set_and_compile_shader(this.shaderProgram.fragmentShader16bit, 
+                                        this.shaderProgram.vertexShader);
+        }
+    }
     THE_TEXTURE = this.gl.createTexture(); 
     this.gl.bindTexture(this.gl.TEXTURE_2D, THE_TEXTURE);  
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
     this.gl.texImage2D(this.gl.TEXTURE_2D,  // target
                   0,                        // level
-                  this.gl.LUMINANCE_ALPHA,  // internalformat
+                  internalFormat,           // internalformat
                   dcmfile.columns,          // width
                   dcmfile.rows,             // height 
                   0,                        // border
-                  this.gl.LUMINANCE_ALPHA,  // format
+                  internalFormat,           // format
                   this.gl.UNSIGNED_BYTE,    // type
                   dcmfile.pixel_data);      // data
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    
                   
     this.gl.bindTexture(this.gl.TEXTURE_2D, null);
 }
@@ -125,29 +153,9 @@ GLPainter.prototype.init = function(canvasid) {
     return true;
 }
 
-GLPainter.prototype.get_shader = function(id) {
-    var shaderScript = document.getElementById(id);
-    if (!shaderScript) {
-        return null;
-    }
+GLPainter.prototype.compile_shader = function(str, shader_type) {
 
-    var str = "";
-    var k = shaderScript.firstChild;
-    while (k) {
-        if (k.nodeType == 3) {
-            str += k.textContent;
-        }
-        k = k.nextSibling;
-    }
-
-    var shader;
-    if (shaderScript.type == "x-shader/x-fragment") {
-        shader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
-    } else if (shaderScript.type == "x-shader/x-vertex") {
-        shader = this.gl.createShader(this.gl.VERTEX_SHADER);
-    } else {
-        return null;
-    }
+    shader = this.gl.createShader(shader_type);
 
     this.gl.shaderSource(shader, str);
     this.gl.compileShader(shader);
@@ -157,15 +165,25 @@ GLPainter.prototype.get_shader = function(id) {
         return null;
     }
     return shader;
+
 }
 
 GLPainter.prototype.init_shaders = function() {
-    var fragmentShader = this.get_shader("shader-fs");
-    var vertexShader = this.get_shader("shader-vs");
+    var fragmentShader8 = this.compile_shader(fragment_shader_8, this.gl.FRAGMENT_SHADER);
+    var fragmentShader16 = this.compile_shader(fragment_shader_16, this.gl.FRAGMENT_SHADER);
+    var vertexShader = this.compile_shader(vertex_shader, this.gl.VERTEX_SHADER);
 
     this.shaderProgram = this.gl.createProgram();
-    this.gl.attachShader(this.shaderProgram, vertexShader);
-    this.gl.attachShader(this.shaderProgram, fragmentShader);
+    this.shaderProgram.fragmentShader8bit = fragmentShader8;
+    this.shaderProgram.fragmentShader16bit = fragmentShader16;
+    this.shaderProgram.vertexShader = vertexShader;
+    this.shaderProgram.activeFragmentShader = FRAG_SHADER_16;
+    this.set_and_compile_shader(fragmentShader16, vertexShader);
+}
+
+GLPainter.prototype.set_and_compile_shader = function(fragshader, vertshader) {
+    this.gl.attachShader(this.shaderProgram, vertshader);
+    this.gl.attachShader(this.shaderProgram, fragshader);
     this.gl.linkProgram(this.shaderProgram);
 
     if (!this.gl.getProgramParameter(this.shaderProgram, this.gl.LINK_STATUS)) {
