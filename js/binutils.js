@@ -40,26 +40,25 @@ function buffer_to_unsigned_be(buffer, len) {
 }
 
 function buffer_to_uint16array_le(buffer, len) {
-    retval = function(i) {
-        return retval.array[i];
-    };
-    retval.array = new Uint16Array(buffer.buffer, buffer.byteOffset, len/2);
+    retval = new Uint16Array(buffer.buffer, buffer.byteOffset, len/2);
     
     return retval;
 }
 
 function buffer_to_uint16array_be(buffer, len) {
-    retval = function(i) {
-        r = retval.array[i];
-        return ((r&0xff)<<8) + ((r&0xff00) >> 8);
-    };
-    retval.array = new Uint16Array(buffer.buffer, buffer.byteOffset, len/2);
+    for(var i=0; i<len; i+=2) {
+        ra = buffer[i];
+        rb = buffer[i+1];
+        buffer[i] = rb;
+        buffer[i+1] = ra;
+    }
+    
+    retval = new Uint16Array(buffer.buffer, buffer.byteOffset, len/2);
     
     return retval;
 }
 
 function buffer_to_uint8array(buffer, len) {
-    // NOTE: Only little endian for now
     return new Uint8Array(buffer.buffer, buffer.byteOffset, len);
 }
 
@@ -112,7 +111,8 @@ var element_to_value_le = {
     "US": buffer_to_unsigned_le,
     "UL": buffer_to_unsigned_le,
     "IS": buffer_to_integer_string,
-    "OW": buffer_to_uint16array_le
+    "OW": buffer_to_uint16array_le,
+    "OB": buffer_to_uint8array
 }
 
 var element_to_value_be = {
