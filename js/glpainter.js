@@ -28,6 +28,7 @@ GLPainter.prototype.is_supported = function() {
 GLPainter.prototype.set_file = function(dcmfile) {
     var internalFormat;
     switch(jQuery.trim(dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
+    case "MONOCHROME1":
     case "MONOCHROME2":
         if(dcmfile.get_element(dcmdict["BitsStored"]).get_value() <= 8) {
             internalFormat = this.gl.LUMINANCE;
@@ -38,7 +39,6 @@ GLPainter.prototype.set_file = function(dcmfile) {
                 this.set_and_compile_shader(this.shaderProgram.fragmentShader8bit, 
                                             this.shaderProgram.vertexShader);
             }
-            
         } else {
             internalFormat = this.gl.LUMINANCE_ALPHA;
             if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_16) {
@@ -66,15 +66,15 @@ GLPainter.prototype.set_file = function(dcmfile) {
     THE_TEXTURE = this.gl.createTexture(); 
     this.gl.bindTexture(this.gl.TEXTURE_2D, THE_TEXTURE);  
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
-    this.gl.texImage2D(this.gl.TEXTURE_2D,  // target
-                  0,                        // level
-                  internalFormat,           // internalformat
-                  dcmfile.columns,          // width
-                  dcmfile.rows,             // height 
-                  0,                        // border
-                  internalFormat,           // format
-                  this.gl.UNSIGNED_BYTE,    // type
-                  dcmfile.pixel_data);      // data
+    this.gl.texImage2D(this.gl.TEXTURE_2D,       // target
+                       0,                        // level
+                       internalFormat,           // internalformat
+                       dcmfile.columns,          // width
+                       dcmfile.rows,             // height 
+                       0,                        // border
+                       internalFormat,           // format
+                       this.gl.UNSIGNED_BYTE,    // type
+                       Uint8Array(dcmfile.pixel_data.buffer, dcmfile.pixel_data.byteOffset)); // data
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);

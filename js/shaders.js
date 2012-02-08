@@ -8,8 +8,8 @@ uniform highp float uWL;\
 void main(void) {  \
     highp vec4 texcolor = texture2D(uSampler, vTextureCoord); \
     highp float intensity = texcolor.r*256.0;\
-    highp float wl = uWL/256.0;\
-    highp float ww = uWW/256.0;\
+    highp float wl = uWL;\
+    highp float ww = uWW;\
     highp float lower_bound = wl - ww/2.0;\
     highp float upper_bound = wl + ww/2.0;\
     intensity = (intensity - lower_bound)/(upper_bound - lower_bound);\
