@@ -66,26 +66,26 @@ function DcmApp(canvasid) {
                     app.files[index] = undefined;
                     return;
                 }
-                file.modality = file.get_element(0x00080060).get_value();
+                file.modality = file.get_element(dcmdict["Modality"]).get_value();
                 
-                var pn = file.get_element(0x00100010).get_value();
+                var pn = file.get_element(dcmdict["PatientsName"]).get_value();
                 if (file.modality == "CT" || file.modality == "PT" || file.modality == "MR") {
-                    file.pixel_data = file.get_element(0x7fe00010).get_value();
-                    file.rows = file.get_element(0x00280010).get_value();
-                    file.columns = file.get_element(0x00280011).get_value();
-                    file.imagePosition = file.get_element(0x00200032).get_value();
-                    imageOrientation = file.get_element(0x00200037).get_value();
+                    file.pixel_data = file.get_element(dcmdict["PixelData"]).get_value();
+                    file.rows = file.get_element(dcmdict["Rows"]).get_value();
+                    file.columns = file.get_element(dcmdict["Columns"]).get_value();
+                    file.imagePosition = file.get_element(dcmdict["ImagePositionPatient"]).get_value();
+                    imageOrientation = file.get_element(dcmdict["ImageOrientationPatient"]).get_value();
                     file.imageOrientationRow = imageOrientation.slice(0,3);
                     file.imageOrientationColumn = imageOrientation.slice(3,6);
                     
-                    file.rescaleIntercept = file.get_element(0x00281052).get_value();
-                    file.rescaleSlope = file.get_element(0x00281053).get_value();
+                    file.rescaleIntercept = file.get_element(dcmdict["RescaleIntercept"]).get_value();
+                    file.rescaleSlope = file.get_element(dcmdict["RescaleSlope"]).get_value();
                     //app.files[index] = file;
                     app.organize_file(file);
                     if(index == 0) {
-                        app.curr_series_uid = file.get_element(0x0020000e).get_value();
+                        app.curr_series_uid = file.get_element(dcmdict["SeriesInstanceUID"]).get_value();
                         app.files = app.series[app.curr_series_uid].files;
-                        //app.draw_image();
+                        app.draw_image();
                     }
                 } else if(file.modality == "US") {
                     file.rows = file.get_element(dcmdict["Rows"]).get_value();
@@ -93,13 +93,16 @@ function DcmApp(canvasid) {
                     file.bits_stored = file.get_element(dcmdict["Columns"]).get_value();
                     file.get_element(dcmdict["PixelData"]).vr = "OB";
                     file.pixel_data = file.get_element(dcmdict["PixelData"]).get_value();
-                    file.photometric_representation =file.get_element(dcmdict["PhotometricInterpretation"]).get_value();
+                    file.photometric_representation = file.get_element(dcmdict["PhotometricInterpretation"]).get_value();
+                    app.wl = 128;
+                    app.ww = 256;
                     app.files[index] = file;
 
                     app.organize_file(file);
                     if(index == 0) {
-                        app.curr_series_uid = file.get_element(0x0020000e).get_value();
+                        app.curr_series_uid = file.get_element(dcmdict["SeriesInstanceUID"]).get_value();
                         app.files = app.series[app.curr_series_uid].files;
+                        app.draw_image();
                     }
                 } else {
                     app.files[index] = file;
@@ -115,8 +118,8 @@ function DcmApp(canvasid) {
     }
 
     this.organize_file = function(file) {
-        var series_uid = file.get_element(0x0020000e).get_value();
-        var series_desc = file.get_element(0x0008103e).get_value();
+        var series_uid = file.get_element(dcmdict["SeriesInstanceUID"]).get_value();
+        var series_desc = file.get_element(dcmdict["SeriesDescription"]).get_value();
         if(!this.series.hasOwnProperty(series_uid)) {
             var series = new DcmSeries();
             series.seriesUID = series_uid;
@@ -134,9 +137,9 @@ function DcmApp(canvasid) {
 
     this.set_series = function(series_uid) {
         this.files = this.series[series_uid].files;
-        if(this.files[0].get_element(0x00281050) !== 0) {
-            app.wl = this.files[0].get_element(0x00281050).get_value();
-            app.ww = this.files[0].get_element(0x00281051).get_value(); 
+        if(this.files[0].get_element(dcmdict["WindowCenter"]) !== 0) {
+            app.wl = this.files[0].get_element(dcmdict["WindowCenter"]).get_value();
+            app.ww = this.files[0].get_element(dcmdict["WindowWidth"]).get_value(); 
             if(app.wl.constructor == Array) {
                 app.update_window_preset_list(app.wl, app.ww);
                 app.wl = app.wl[0];
@@ -149,6 +152,7 @@ function DcmApp(canvasid) {
         }
         this.curr_file_idx = 0;
         this.clear_image();
+        this.set_windowing(app.ww, app.wl);
         this.draw_image();
     }
 
