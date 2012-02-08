@@ -70,7 +70,8 @@ function DcmApp(canvasid) {
                 
                 var pn = file.get_element(0x00100010).get_value();
                 if (file.modality == "CT" || file.modality == "PT" || file.modality == "MR") {
-                    file.pixel_data = file.get_element(0x7fe00010).get_value();
+                    //file.pixel_data = file.get_element(0x7fe00010).get_value();
+                    file.pixel_data = file.get_element(0x7fe00010).data;
                     file.rows = file.get_element(0x00280010).get_value();
                     file.columns = file.get_element(0x00280011).get_value();
                     file.imagePosition = file.get_element(0x00200032).get_value();
@@ -92,7 +93,8 @@ function DcmApp(canvasid) {
                     file.columns = file.get_element(dcmdict["Columns"]).get_value();
                     file.bits_stored = file.get_element(dcmdict["Columns"]).get_value();
                     file.get_element(dcmdict["PixelData"]).vr = "OB";
-                    file.pixel_data = file.get_element(dcmdict["PixelData"]).get_value();
+                    //file.pixel_data = file.get_element(dcmdict["PixelData"]).get_value();
+                    file.pixel_data = file.get_element(dcmdict["PixelData"]).data;
                     file.photometric_representation =file.get_element(dcmdict["PhotometricInterpretation"]).get_value();
                     app.files[index] = file;
 

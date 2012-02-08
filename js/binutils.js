@@ -129,7 +129,7 @@ var element_to_value_be = {
     "US": buffer_to_unsigned_be,
     "UL": buffer_to_unsigned_be,
     "IS": buffer_to_integer_string,
-    "OW": buffer_to_uint16array_be
+    "OW": buffer_to_uint16array_be,
     "OB": buffer_to_uint8array,
 }
 
