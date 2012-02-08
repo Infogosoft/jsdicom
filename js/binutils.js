@@ -36,6 +36,11 @@ function buffer_to_uint16array(buffer, len) {
     return new Uint16Array(buffer.buffer, buffer.byteOffset, len/2);
 }
 
+function buffer_to_uint8array(buffer, len) {
+    // NOTE: Only little endian for now
+    return new Uint8Array(buffer.buffer, buffer.byteOffset, len);
+}
+
 function buffer_to_integer_string(buffer, len) {
     return parseInt(buffer_to_string(buffer, len));
 }
@@ -70,6 +75,7 @@ var element_to_value = {
     "US": buffer_to_unsigned,
     "UL": buffer_to_unsigned,
     "IS": buffer_to_integer_string,
+    "OB": buffer_to_uint8array,
     "OW": buffer_to_uint16array
 }
 

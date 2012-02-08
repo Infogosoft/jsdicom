@@ -1,5 +1,6 @@
 var FRAG_SHADER_8 = 0;
 var FRAG_SHADER_16 = 1;
+var FRAG_SHADER_RGB_8 = 2;
 
 function GLPainter() {
     this.gl;
@@ -26,27 +27,42 @@ GLPainter.prototype.is_supported = function() {
 
 GLPainter.prototype.set_file = function(dcmfile) {
     var internalFormat;
-    if(dcmfile.get_element(0x00280101).get_value() <= 8) {
-        internalFormat = this.gl.LUMINANCE;
-        // Change shader?
-        if(this.shaderProgram.activeFragmentShader == FRAG_SHADER_16) {
-            this.shaderProgram.activeFragmentShader = FRAG_SHADER_8;
-            this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShader16bit);
-            this.gl.detachShader(this.shaderProgram, this.shaderProgram.vertexShader);
-            this.set_and_compile_shader(this.shaderProgram.fragmentShader8bit, 
+    switch(jQuery.trim(dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
+    case "MONOCHROME2":
+        if(dcmfile.get_element(dcmdict["BitsStored"]).get_value() <= 8) {
+            internalFormat = this.gl.LUMINANCE;
+            // Change shader?
+            if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_8) {
+                this.detach_shaders();
+                this.shaderProgram.activeFragmentShader = FRAG_SHADER_8;
+                this.set_and_compile_shader(this.shaderProgram.fragmentShader8bit, 
+                                            this.shaderProgram.vertexShader);
+            }
+            
+        } else {
+            internalFormat = this.gl.LUMINANCE_ALPHA;
+            if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_16) {
+                this.detach_shaders();
+                this.shaderProgram.activeFragmentShader = FRAG_SHADER_16;
+                this.set_and_compile_shader(this.shaderProgram.fragmentShader16bit, 
+                                            this.shaderProgram.vertexShader);
+            }
+        }
+        break;
+    case "RGB":
+        internalFormat = this.gl.RGB;
+        if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_RGB_8) {
+            this.detach_shaders();
+            this.shaderProgram.activeFragmentShader = FRAG_SHADER_RGB_8;
+            this.set_and_compile_shader(this.shaderProgram.fragmentShaderRGB8bit, 
                                         this.shaderProgram.vertexShader);
         }
-
-    } else {
-        internalFormat = this.gl.LUMINANCE_ALPHA;
-        if(this.shaderProgram.activeFragmentShader == FRAG_SHADER_8) {
-            this.shaderProgram.activeFragmentShader = FRAG_SHADER_16;
-            this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShader8bit);
-            this.gl.detachShader(this.shaderProgram, this.shaderProgram.vertexShader);
-            this.set_and_compile_shader(this.shaderProgram.fragmentShader16bit, 
-                                        this.shaderProgram.vertexShader);
-        }
+        break;
+    default:
+        alert("Unknown Photometric Interpretation" + dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value() + "!");
+        return;
     }
+
     THE_TEXTURE = this.gl.createTexture(); 
     this.gl.bindTexture(this.gl.TEXTURE_2D, THE_TEXTURE);  
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -63,7 +79,6 @@ GLPainter.prototype.set_file = function(dcmfile) {
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-    
                   
     this.gl.bindTexture(this.gl.TEXTURE_2D, null);
 }
@@ -99,6 +114,22 @@ GLPainter.prototype.set_windowing = function(ww, wl) {
 }
 GLPainter.prototype.get_windowing = function(ww, wl) {
     return [this.ww, this.wl];
+}
+
+GLPainter.prototype.detach_shaders = function() {
+    switch(this.shaderProgram.activeFragmentShader) {
+    case FRAG_SHADER_16:
+        this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShader16bit);
+        break;
+    case FRAG_SHADER_8:
+        this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShader8bit);
+        break;
+    case FRAG_SHADER_RGB_8:
+        this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShaderRGB8bit);
+        break;
+    }
+    this.gl.detachShader(this.shaderProgram, this.shaderProgram.vertexShader);
+    this.shaderProgram.activeFragmentShader = null;
 }
 
 GLPainter.prototype.draw_image = function() {
@@ -171,14 +202,16 @@ GLPainter.prototype.compile_shader = function(str, shader_type) {
 GLPainter.prototype.init_shaders = function() {
     var fragmentShader8 = this.compile_shader(fragment_shader_8, this.gl.FRAGMENT_SHADER);
     var fragmentShader16 = this.compile_shader(fragment_shader_16, this.gl.FRAGMENT_SHADER);
+    var fragmentShaderRGB8 = this.compile_shader(fragment_shader_rgb_8, this.gl.FRAGMENT_SHADER);
     var vertexShader = this.compile_shader(vertex_shader, this.gl.VERTEX_SHADER);
 
     this.shaderProgram = this.gl.createProgram();
     this.shaderProgram.fragmentShader8bit = fragmentShader8;
     this.shaderProgram.fragmentShader16bit = fragmentShader16;
+    this.shaderProgram.fragmentShaderRGB8bit = fragmentShaderRGB8;
     this.shaderProgram.vertexShader = vertexShader;
-    this.shaderProgram.activeFragmentShader = FRAG_SHADER_16;
-    this.set_and_compile_shader(fragmentShader16, vertexShader);
+    this.shaderProgram.activeFragmentShader = FRAG_SHADER_RGB_8;
+    this.set_and_compile_shader(fragmentShaderRGB8, vertexShader);
 }
 
 GLPainter.prototype.set_and_compile_shader = function(fragshader, vertshader) {
