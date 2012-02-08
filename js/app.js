@@ -91,7 +91,7 @@ function DcmApp(canvasid) {
                     file.rows = file.get_element(dcmdict["Rows"]).get_value();
                     file.columns = file.get_element(dcmdict["Columns"]).get_value();
                     file.bits_stored = file.get_element(dcmdict["Columns"]).get_value();
-                    file.get_element(dcmdict["PixelData"]).vr = "OB";
+                    file.get_element(dcmdict["PixelData"]).vr = "OB"; 
                     file.pixel_data = file.get_element(dcmdict["PixelData"]).get_value();
                     file.photometric_representation = file.get_element(dcmdict["PhotometricInterpretation"]).get_value();
                     app.wl = 128;

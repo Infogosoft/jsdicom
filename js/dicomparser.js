@@ -62,19 +62,20 @@ DicomParser.prototype.parse_file = function() {
 
     // Parse File Meta Information
     while(offset < meta_element_end) {
-        var meta_element = new DataElement();
+        var meta_element = new DataElement(true);
         offset = meta_element_reader.read_element(this.buffer, offset, meta_element);
         file.meta_elements.push(meta_element);
     }
 
     var transfer_syntax = file.get_meta_element(0x00020010).get_value();
+    var little_endian = is_little_endian[transfer_syntax];
     // Get reader for transfer syntax
     var element_reader = get_element_reader(transfer_syntax);
     if(element_reader == undefined)
         throw "Unknown TransferSyntaxUID";
     // Parse Dicom-Data-Set
     while(offset < this.buffer.length) {
-        var data_element = new DataElement();
+        var data_element = new DataElement(little_endian);
         offset = element_reader.read_element(this.buffer, offset, data_element);
         file.data_elements.push(data_element);
     }
