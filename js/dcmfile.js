@@ -1,22 +1,29 @@
-function DataElement(tag, vr, vl, data) {
-    this.tag = tag;
-    this.vr = vr;
-    this.vl = vl;
-    this.data = data;
-    this.get_value = function() {
-        if(this.vr in element_to_value) {
-            return element_to_value[this.vr](this.data, this.vl);
-        } else {
-            return undefined;
-        }
+function DataElement(little_endian) {
+    this.tag;
+    this.vr;
+    this.vl;
+    this.data;
+    this.little_endian = little_endian;
+    var get_value = function(element_to_value) {
+        return function() {
+            if(this.vr in element_to_value) {
+                return element_to_value[this.vr](this.data, this.vl);
+            } else {
+                return undefined;
+            }
+        };
+    };
+    this.get_value = get_value(this.little_endian ? element_to_value_le : element_to_value_be);
+    var get_repr = function(element_to_repr) {
+        return function() {
+            if(this.vr in element_to_repr) {
+                return element_to_repr[this.vr](this.data, this.vl);
+            } else {
+                return undefined;
+            }
+        };
     }
-    this.get_repr = function() {
-        if(this.vr in element_to_repr) {
-            return element_to_repr[this.vr](this.data, this.vl);
-        } else {
-            return undefined;
-        }
-    }
+    this.get_repr = get_repr(this.little_endian ? element_to_repr_le : element_to_repr_be);
 }
 
 function DcmFile() {
