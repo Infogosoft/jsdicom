@@ -91,11 +91,11 @@ function DcmApp(canvasid) {
                     file.rows = file.get_element(dcmdict["Rows"]).get_value();
                     file.columns = file.get_element(dcmdict["Columns"]).get_value();
                     file.bits_stored = file.get_element(dcmdict["Columns"]).get_value();
-                    file.get_element(dcmdict["PixelData"]).vr = "OB"; 
+                    //file.get_element(dcmdict["PixelData"]).vr = "OB"; 
                     file.pixel_data = file.get_element(dcmdict["PixelData"]).get_value();
                     file.photometric_representation = file.get_element(dcmdict["PhotometricInterpretation"]).get_value();
-                    app.wl = 128;
-                    app.ww = 256;
+                    file.rescaleIntercept = 0;
+                    file.rescaleSlope = 1;
                     app.files[index] = file;
 
                     app.organize_file(file);
@@ -147,8 +147,16 @@ function DcmApp(canvasid) {
             if(app.ww.constructor == Array) {
                 app.ww = app.ww[0];
             }
+        } else if(this.files[0].get_element(dcmdict["RescaleSlope"]) !== 0) {
+            // TODO check the actual datatype instead of using 65536...
+            maxval = this.files[0].get_element(dcmdict["RescaleSlope"]).get_value() * 65536 +
+                this.files[0].get_element(dcmdict["RescaleIntercept"]).get_value();
+            minval = this.files[0].get_element(dcmdict["RescaleIntercept"]).get_value();
+            app.ww = maxval-minval;
+            app.wl = (maxval+minval)/2;
         } else {
-            // TODO: Set to some default based on modality?
+            app.ww = 65536.0;
+            app.wl = 32768.0;
         }
         this.curr_file_idx = 0;
         this.clear_image();
