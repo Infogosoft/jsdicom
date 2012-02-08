@@ -23,7 +23,7 @@ function DcmApp(canvasid) {
     this.mouse_down = false;
 
     this.series = {};
-    this.curr_serie_uid = "";
+    this.curr_series_uid = "";
     this.files = []; // points to files-array in current series
     this.files_loaded = 0;
     this.curr_file_idx = 0;
@@ -70,7 +70,7 @@ function DcmApp(canvasid) {
                 
                 var pn = file.get_element(0x00100010).get_value();
                 if (file.modality == "CT" || file.modality == "PT" || file.modality == "MR") {
-                    file.pixel_data = file.get_element(0x7fe00010).data;
+                    file.pixel_data = file.get_element(0x7fe00010).get_value();
                     file.rows = file.get_element(0x00280010).get_value();
                     file.columns = file.get_element(0x00280011).get_value();
                     file.imagePosition = file.get_element(0x00200032).get_value();
@@ -83,19 +83,24 @@ function DcmApp(canvasid) {
                     //app.files[index] = file;
                     app.organize_file(file);
                     if(index == 0) {
-                        
-                        app.curr_serie_uid = file.get_element(0x0020000e).get_value();
-                        app.files = app.series[app.curr_serie_uid].files;
+                        app.curr_series_uid = file.get_element(0x0020000e).get_value();
+                        app.files = app.series[app.curr_series_uid].files;
                         //app.draw_image();
                     }
                 } else if(file.modality == "US") {
-                    file.pixel_data = file.get_element(0x7fe00010).data;
-                    file.rows = file.get_element(0x00280010).get_value();
-                    file.columns = file.get_element(0x00280011).get_value();
-                    //file.rescaleIntercept = file.get_element(0x00281052).get_value();
-                    //file.rescaleSlope = file.get_element(0x00281053).get_value();
+                    file.rows = file.get_element(dcmdict["Rows"]).get_value();
+                    file.columns = file.get_element(dcmdict["Columns"]).get_value();
+                    file.bits_stored = file.get_element(dcmdict["Columns"]).get_value();
+                    file.get_element(dcmdict["PixelData"]).vr = "OB";
+                    file.pixel_data = file.get_element(dcmdict["PixelData"]).get_value();
+                    file.photometric_representation =file.get_element(dcmdict["PhotometricInterpretation"]).get_value();
                     app.files[index] = file;
 
+                    app.organize_file(file);
+                    if(index == 0) {
+                        app.curr_series_uid = file.get_element(0x0020000e).get_value();
+                        app.files = app.series[app.curr_series_uid].files;
+                    }
                 } else {
                     app.files[index] = file;
                 }
@@ -113,21 +118,21 @@ function DcmApp(canvasid) {
         var series_uid = file.get_element(0x0020000e).get_value();
         var series_desc = file.get_element(0x0008103e).get_value();
         if(!this.series.hasOwnProperty(series_uid)) {
-            var serie = new DcmSerie();
-            serie.seriesUID = series_uid;
-            serie.seriesDescription = series_desc;
-            this.series[series_uid] = serie;
+            var series = new DcmSeries();
+            series.seriesUID = series_uid;
+            series.seriesDescription = series_desc;
+            this.series[series_uid] = series;
         }
         this.series[series_uid].files.push(file);
     }
 
 
     this.setup_series_selection = function() {
-        fill_serie_selection(this.series, this.curr_serie_uid);
-        this.set_serie(this.curr_serie_uid);
+        fill_series_selection(this.series, this.curr_series_uid);
+        this.set_series(this.curr_series_uid);
     }
 
-    this.set_serie = function(series_uid) {
+    this.set_series = function(series_uid) {
         this.files = this.series[series_uid].files;
         if(this.files[0].get_element(0x00281050) !== 0) {
             app.wl = this.files[0].get_element(0x00281050).get_value();

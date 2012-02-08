@@ -39,6 +39,16 @@ void main(void) {  \
     gl_FragColor = vec4(intensity, intensity, intensity, 1.0);\
 }";
 
+var fragment_shader_rgb_8 = "\
+varying highp vec2 vTextureCoord;\
+uniform sampler2D uSampler;\
+ \
+void main()\
+{\
+    highp vec4 texcolor = texture2D(uSampler, vTextureCoord); \
+    gl_FragColor = vec4(texcolor.r, texcolor.g, texcolor.b, 1.0);\
+}";
+
 
 var vertex_shader = "\
 attribute vec3 aVertexPosition;\

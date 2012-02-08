@@ -58,6 +58,11 @@ function buffer_to_uint16array_be(buffer, len) {
     return retval;
 }
 
+function buffer_to_uint8array(buffer, len) {
+    // NOTE: Only little endian for now
+    return new Uint8Array(buffer.buffer, buffer.byteOffset, len);
+}
+
 function buffer_to_integer_string(buffer, len) {
     return parseInt(buffer_to_string(buffer, len));
 }
@@ -125,6 +130,7 @@ var element_to_value_be = {
     "UL": buffer_to_unsigned_be,
     "IS": buffer_to_integer_string,
     "OW": buffer_to_uint16array_be
+    "OB": buffer_to_uint8array,
 }
 
 function tag_repr(tag) {

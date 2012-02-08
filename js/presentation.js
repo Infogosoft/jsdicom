@@ -1,6 +1,6 @@
 // Maybe use some cool js-templating, like mustasche?
 
-function fill_serie_selection(series, selected_uid) {
+function fill_series_selection(series, selected_uid) {
     var series_list = $("#series-selection");
     series_list.empty();
     var size = 128;
@@ -22,7 +22,7 @@ function fill_serie_selection(series, selected_uid) {
             return function() {
                 series_list.find("li").removeClass('series-selected');
                 $(this).addClass('series-selected');
-                app.set_serie(u);
+                app.set_series(u);
             }
         })(uid));
         series_list.append(item);
