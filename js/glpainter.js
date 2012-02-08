@@ -13,6 +13,8 @@ function GLPainter() {
 
     this.ww = 200;
     this.wl = 40;
+    this.rs = 1;
+    this.ri = -1024;
     this.ztrans = -1;
     this.xtrans = 0.0;
     this.ytrans = 0.0;
@@ -26,6 +28,8 @@ GLPainter.prototype.is_supported = function() {
 }
 
 GLPainter.prototype.set_file = function(dcmfile) {
+    this.rs=dcmfile.rescaleSlope;
+    this.ri=dcmfile.rescaleIntercept;
     var internalFormat;
     switch(jQuery.trim(dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
     case "MONOCHROME1":
@@ -235,6 +239,8 @@ GLPainter.prototype.set_and_compile_shader = function(fragshader, vertshader) {
     this.shaderProgram.samplerUniform = this.gl.getUniformLocation(this.shaderProgram, "uSampler");
     this.shaderProgram.wlUniform = this.gl.getUniformLocation(this.shaderProgram, "uWL");
     this.shaderProgram.wwUniform = this.gl.getUniformLocation(this.shaderProgram, "uWW");
+    this.shaderProgram.riUniform = this.gl.getUniformLocation(this.shaderProgram, "uRI");
+    this.shaderProgram.rsUniform = this.gl.getUniformLocation(this.shaderProgram, "uRS");
 }
 
 GLPainter.prototype.set_matrix_uniforms = function() {
@@ -245,6 +251,8 @@ GLPainter.prototype.set_matrix_uniforms = function() {
 GLPainter.prototype.set_window_uniforms = function() {
     this.gl.uniform1f(this.shaderProgram.wlUniform, this.wl);
     this.gl.uniform1f(this.shaderProgram.wwUniform, this.ww);
+    this.gl.uniform1f(this.shaderProgram.rsUniform, this.rs);
+    this.gl.uniform1f(this.shaderProgram.riUniform, this.ri);
 }
 
 GLPainter.prototype.init_buffers = function() {
