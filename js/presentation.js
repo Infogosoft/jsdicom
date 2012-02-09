@@ -1,13 +1,16 @@
 // Maybe use some cool js-templating, like mustasche?
 
-function fill_series_selection(series, selected_uid) {
+function fill_series_selection(series, selected_uid, painter_factory) {
     var series_list = $("#series-selection");
     series_list.empty();
     var size = 128;
+    var idx = 0;
     for(var uid in series) {
+        idx++;
         instance_number_sort(series[uid].files);
         var item = $("<li>");
         var thumb_canvas = document.createElement("canvas");
+        thumb_canvas.id = 'canvas_thumb_' + idx;
         thumb_canvas.width = size;
         thumb_canvas.height = size;
         item.append(thumb_canvas);
@@ -15,9 +18,9 @@ function fill_series_selection(series, selected_uid) {
         if(uid == selected_uid) {
             item.addClass('series-selected');
         }
-        draw_thumbnail_to_canvas(series[uid].files[0], 
-                                 thumb_canvas.getContext('2d'), 
-                                 size);
+        //draw_thumbnail_to_canvas(series[uid].files[0], 
+        //                         thumb_canvas.getContext('2d'), 
+        //                         size);
         item.click((function(u) {
             return function() {
                 series_list.find("li").removeClass('series-selected');
@@ -26,6 +29,11 @@ function fill_series_selection(series, selected_uid) {
             }
         })(uid));
         series_list.append(item);
+        var painter = painter_factory();
+        painter.init(thumb_canvas.id);
+        painter.set_file(series[uid].files[0]);
+        painter.set_windowing(200, 40);
+        painter.draw_image();
     }
 }
 

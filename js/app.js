@@ -131,7 +131,7 @@ function DcmApp(canvasid) {
 
 
     this.setup_series_selection = function() {
-        fill_series_selection(this.series, this.curr_series_uid);
+        fill_series_selection(this.series, this.curr_series_uid, function() { return new GLPainter(); });
         this.set_series(this.curr_series_uid);
     }
 
