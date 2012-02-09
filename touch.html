@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>DICOM</title>
+
+    <script type="text/javascript" src="js/touch.min.js"></script>
+    <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="js/glpainter.js"></script>
+    <script type="text/javascript" src="js/canvaspainter.js"></script>
+    <script type="text/javascript" src="js/shaders.js"></script>
+    <script type="text/javascript" src="jquery/js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
+
+    <script type="text/javascript" src="js/dcmdict.js"></script>
+    <script type="text/javascript" src="js/cluts/plain.js"></script>
+    <script type="text/javascript" src="js/cluts/rainbow.js"></script>
+    <script type="text/javascript" src="js/cluts/blackbody.js"></script>
+    <script type="text/javascript" src="js/tools.js"></script>
+    <script type="text/javascript" src="js/binutils.js"></script>
+    <script type="text/javascript" src="js/utilities.js"></script>
+    <script type="text/javascript" src="js/dcmserie.js"></script>
+    <script type="text/javascript" src="js/dcmfile.js"></script>
+    <script type="text/javascript" src="js/dicomparser.js"></script>
+    <script type="text/javascript" src="js/transfersyntax.js"></script>
+    <script type="text/javascript" src="js/presentation.js"></script>
+    <script type="text/javascript" src="tests/file_fixtures.js"></script>
+
+    <script type="text/javascript">
+    var pixel_data;
+    $(document).ready(function() {
+    
+        var filedata = base64_to_typedarray(file1);
+        var parser = new DicomParser(filedata);
+        var file = parser.parse_file();
+        file.pixel_data = file.get_element(0x7fe00010).get_value();
+        file.rows = file.get_element(0x00280010).get_value();
+        file.columns = file.get_element(0x00280011).get_value();
+        file.rescaleIntercept = file.get_element(dcmdict["RescaleIntercept"]).get_value();
+        file.rescaleSlope = file.get_element(dcmdict["RescaleSlope"]).get_value();
+        var pn = file.get_element(0x00100010).get_value();
+
+        painter = new CanvasPainter();
+        painter.init("c1");
+        painter.set_file(file);
+        painter.set_windowing(200.0, 40.0);
+        //painter.set_cluts(blackbody_red, blackbody_green, blackbody_blue);
+        painter.set_cluts(plain_red, plain_green, plain_blue);
+        painter.draw_image();
+
+        // Touch test
+        $(document).bind('touchmove', function(e) {
+            e.preventDefault();
+        });
+        var is_down = false;
+        var startpos;
+        Touchy(document.getElementById("c1"), function(hand, finger) {
+            finger.on('start', function(point) {
+                startpos = point;
+            });
+
+            finger.on('move', function(point) {
+            });
+            finger.on('end', function(point) {
+                var wind = painter.get_windowing();
+                painter.set_windowing(wind[0] + (startpos.x - point.x), 
+                                      wind[1] + (startpos.y - point.y));
+                painter.draw_image();
+            });
+        });
+    });
+    </script>
+<style>
+body {
+    overflow: hidden;
+}
+</style>
+</head>
+<body>
+    <canvas id="c1" width="512" height="512"></canvas>
+</body>
+</html>
+
