@@ -67,8 +67,8 @@ GLPainter.prototype.set_file = function(dcmfile) {
         return;
     }
 
-    THE_TEXTURE = this.gl.createTexture(); 
-    this.gl.bindTexture(this.gl.TEXTURE_2D, THE_TEXTURE);  
+    this.THE_TEXTURE = this.gl.createTexture(); 
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.THE_TEXTURE);  
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
     this.gl.texImage2D(this.gl.TEXTURE_2D,       // target
                        0,                        // level
@@ -145,6 +145,12 @@ GLPainter.prototype.draw_image = function() {
     mat4.translate(this.mvMatrix, [this.pan[0], -this.pan[1], -1]);
     mat4.scale(this.mvMatrix, [this.scale,this.scale,this.scale]);
 
+    // Hack to fit image if height is greater than width
+    if(this.canvas.height > this.canvas.width) {
+        var canvas_scale = this.canvas.width/this.canvas.height;
+        mat4.scale(this.mvMatrix, [canvas_scale,canvas_scale,canvas_scale]);
+    }
+
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
     this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, 
                            this.squareVertexPositionBuffer.itemSize, 
@@ -157,7 +163,7 @@ GLPainter.prototype.draw_image = function() {
     this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute, this.textureCoordBuffer.itemSize, this.gl.FLOAT, false, 0, 0);
 
     this.gl.activeTexture(this.gl.TEXTURE0);  
-    this.gl.bindTexture(this.gl.TEXTURE_2D, THE_TEXTURE);  
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.THE_TEXTURE);  
     this.gl.uniform1i(this.shaderProgram.samplerUniform, 0);
 
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
@@ -173,9 +179,12 @@ GLPainter.prototype.init = function(canvasid) {
         this.gl = canvas.getContext("experimental-webgl");
         this.gl.viewportWidth = canvas.width;
         this.gl.viewportHeight = canvas.height;
+        this.canvas = canvas;
     } catch (e) {
     }
     
+    canvas.onresize = function() {
+    }
     this.init_shaders();
     this.init_buffers();
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -186,6 +195,12 @@ GLPainter.prototype.init = function(canvasid) {
         return false;
     }
     return true;
+}
+
+GLPainter.prototype.onresize = function() {
+    this.gl.viewportWidth = this.canvas.clientWidth;
+    this.gl.viewportHeight = this.canvas.clientHeight;
+    this.draw_image();
 }
 
 GLPainter.prototype.compile_shader = function(str, shader_type) {

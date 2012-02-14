@@ -1,4 +1,4 @@
-
+var timer_event;
 function log(s)
 {
     var logEntry = $("<li>").html(s);
@@ -329,5 +329,21 @@ function DcmApp(canvasid) {
             return false;
 
         }, false);
+        window.onresize = function(evt) {
+            // Update canvas dimension and redraw
+            clearTimeout(timer_event);
+            function resize_canvas() {
+                var container = document.getElementById('view-area');
+                var c = document.getElementById('c1');
+                c.width = container.clientWidth - 20;
+                c.height = container.clientHeight - 20;
+                app.painter.onresize();
+            }
+            timer_event = setTimeout(resize_canvas, 10);
+            
+            //setTimeout("app.painter.onresize()", 100);
+            //this.painter.init(this.canvasid);
+            //this.painter.draw_image();
+        }
     }
 }
