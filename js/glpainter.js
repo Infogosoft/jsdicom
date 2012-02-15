@@ -97,6 +97,10 @@ GLPainter.prototype.get_scale = function(scale) {
     return this.scale;
 }
 
+GLPainter.prototype.reset_scale = function(scale) {
+    this.scale = 1.0;
+}
+
 GLPainter.prototype.set_pan = function(panx, pany) {
     this.pan[0] = panx;
     this.pan[1] = pany;
@@ -107,17 +111,22 @@ GLPainter.prototype.get_pan = function() {
     return this.pan;
 }
 
+GLPainter.prototype.reset_pan = function() {
+    this.pan[0] = 0.0;
+    this.pan[1] = 0.0;
+}
+
 GLPainter.prototype.set_cluts = function(r_clut, g_clut, b_clut) {
     // TODO: send cluts to shader as Uniform array
 }
 
-GLPainter.prototype.set_windowing = function(ww, wl) {
+GLPainter.prototype.set_windowing = function(wl, ww) {
     this.ww = ww;
     this.wl = wl;
     this.draw_image();
 }
-GLPainter.prototype.get_windowing = function(ww, wl) {
-    return [this.ww, this.wl];
+GLPainter.prototype.get_windowing = function() {
+    return [this.wl, this.ww];
 }
 
 GLPainter.prototype.detach_shaders = function() {
@@ -177,14 +186,15 @@ GLPainter.prototype.init = function(canvasid) {
     try {
         var canvas = document.getElementById(canvasid);
         this.gl = canvas.getContext("experimental-webgl");
+        //this.gl = canvas.getContext("webgl");
         this.gl.viewportWidth = canvas.width;
         this.gl.viewportHeight = canvas.height;
         this.canvas = canvas;
     } catch (e) {
+        alert("Failed to initialize GL-context");
+        return;
     }
-    
-    canvas.onresize = function() {
-    }
+
     this.init_shaders();
     this.init_buffers();
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
