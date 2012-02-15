@@ -32,7 +32,7 @@ function fill_series_selection(series, selected_uid, painter_factory) {
         var painter = painter_factory();
         painter.init(thumb_canvas.id);
         painter.set_file(series[uid].files[0]);
-        painter.set_windowing(200, 40);
+        painter.set_windowing(40, 200);
         painter.draw_image();
     }
 }

@@ -22,7 +22,7 @@ CanvasPainter.prototype.set_cluts = function(r_clut, g_clut, b_clut) {
     this.b_clut = b_clut;
 }
 
-CanvasPainter.prototype.set_windowing = function(ww, wl) {
+CanvasPainter.prototype.set_windowing = function(wl, ww) {
     this.ww = ww;
     this.wl = wl;
 }
@@ -35,7 +35,7 @@ CanvasPainter.prototype.get_scale = function(scale) {
 }
 
 CanvasPainter.prototype.get_windowing = function() {
-    return [this.ww, this.wl];
+    return [this.wl, this.ww];
 }
 
 CanvasPainter.prototype.init = function(canvasid) {

@@ -5,24 +5,22 @@ body {
 }
 
 #filebox {
-    float: left;
+    position: absolute;
+    height: auto;
+    bottom: 0;
+    top: 0;
+    left: 0;
     width: 173px;
+
 }
 
-.box h2 {
-    -moz-border-bottom-colors: none;
-    background: -moz-linear-gradient(center top , #829AA8, #405A6A) repeat scroll 0 0 transparent;
-    border-color: #677C89 #677C89 #6B808D;
-    border-radius: 5px 5px 0 0;
-    border-style: solid;
-    border-width: 1px;
-    color: #FFFFFF;
-    font-size: 12px;
-    font-weight: bold;
-    margin: 0;
-    padding: 3px 13px;
-    position: relative;
-    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.7);
+#viewer {
+    position: absolute;
+    height: auto;
+    left: 180px;
+    bottom: 0;
+    top: 0;
+    right: 0px;
 }
 
 .box {
@@ -46,12 +44,16 @@ body {
 #button-bar-horz > .tool-button:first-child {
     border-radius: 4px 0px 0px 4px;
     float: left;
+    margin-left: 10px;
 }
 
 #button-bar-horz > .tool-button:last-child {
     border-radius: 0px 4px 4px 0px;
     margin-left: 0px;
     float: left;
+}
+#button-bar-horz > .tool-button {
+    margin-left: 0px;
 }
 
 #button-bar-vert {
@@ -72,6 +74,7 @@ body {
 }
 
 .tool-button { 
+    float:left;
     background: -moz-linear-gradient(top, #ccc 40%, #eee 60%);
     border: 1px solid #aaa;
     border-radius: 2px 2px 2px 2px;
@@ -95,19 +98,13 @@ body {
     background: #fff;
 }
 
-#slider-holder {
-    width:512px;
+.slider-holder {
     margin-bottom: 10px;
-    padding-right: 10px;
+    padding-right: 24px;
     padding-left: 10px;
 }
 
-#canvas-holder {
-    /*padding: 20px;*/
-    float: left;
-    width: 540px;
-    height: 612px;
-}
+
 
 #dicomheader {
     background: #000;
@@ -119,12 +116,8 @@ td {
     margin:0;
 }
 #viewer-bar {
-    width: 512px;
     height: 25px;
     margin-bottom: 10px;
-}
-#viewer-bar > div {
-    float:left;
 }
 
 #viewer-bar >select {
@@ -208,21 +201,32 @@ tr.even {
     box-shadow: 0 0 8px;
 }
 
+#view-area {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    top: 52px;
+}
+
 #c1 {
-    margin: 13px;
     border: 1px solid #aaa;
 }
 
-#dropbox {
-    font-size: 12pt;
-    border: 1px dotted black;
-    margin: 4px;
-    padding: 4px;
-    padding-top: 50px;
-    padding-left: 20px;
-    border-radius: 5px 5px 5px 5px;
-    height: 80px;
-
+.box h2 {
+    -moz-border-bottom-colors: none;
+    background: -moz-linear-gradient(center top , #829AA8, #405A6A) repeat scroll 0 0 transparent;
+    border-color: #677C89 #677C89 #6B808D;
+    border-radius: 5px 5px 0 0;
+    border-style: solid;
+    border-width: 1px;
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0;
+    padding: 3px 13px;
+    position: relative;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.7);
 }
 
 /* Transition stuffs */

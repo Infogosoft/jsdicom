@@ -67,8 +67,8 @@ GLPainter.prototype.set_file = function(dcmfile) {
         return;
     }
 
-    THE_TEXTURE = this.gl.createTexture(); 
-    this.gl.bindTexture(this.gl.TEXTURE_2D, THE_TEXTURE);  
+    this.THE_TEXTURE = this.gl.createTexture(); 
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.THE_TEXTURE);  
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
     this.gl.texImage2D(this.gl.TEXTURE_2D,       // target
                        0,                        // level
@@ -97,6 +97,10 @@ GLPainter.prototype.get_scale = function(scale) {
     return this.scale;
 }
 
+GLPainter.prototype.reset_scale = function(scale) {
+    this.scale = 1.0;
+}
+
 GLPainter.prototype.set_pan = function(panx, pany) {
     this.pan[0] = panx;
     this.pan[1] = pany;
@@ -107,17 +111,22 @@ GLPainter.prototype.get_pan = function() {
     return this.pan;
 }
 
+GLPainter.prototype.reset_pan = function() {
+    this.pan[0] = 0.0;
+    this.pan[1] = 0.0;
+}
+
 GLPainter.prototype.set_cluts = function(r_clut, g_clut, b_clut) {
     // TODO: send cluts to shader as Uniform array
 }
 
-GLPainter.prototype.set_windowing = function(ww, wl) {
+GLPainter.prototype.set_windowing = function(wl, ww) {
     this.ww = ww;
     this.wl = wl;
     this.draw_image();
 }
-GLPainter.prototype.get_windowing = function(ww, wl) {
-    return [this.ww, this.wl];
+GLPainter.prototype.get_windowing = function() {
+    return [this.wl, this.ww];
 }
 
 GLPainter.prototype.detach_shaders = function() {
@@ -145,6 +154,12 @@ GLPainter.prototype.draw_image = function() {
     mat4.translate(this.mvMatrix, [this.pan[0], -this.pan[1], -1]);
     mat4.scale(this.mvMatrix, [this.scale,this.scale,this.scale]);
 
+    // Hack to fit image if height is greater than width
+    if(this.canvas.height > this.canvas.width) {
+        var canvas_scale = this.canvas.width/this.canvas.height;
+        mat4.scale(this.mvMatrix, [canvas_scale,canvas_scale,canvas_scale]);
+    }
+
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
     this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, 
                            this.squareVertexPositionBuffer.itemSize, 
@@ -157,7 +172,7 @@ GLPainter.prototype.draw_image = function() {
     this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute, this.textureCoordBuffer.itemSize, this.gl.FLOAT, false, 0, 0);
 
     this.gl.activeTexture(this.gl.TEXTURE0);  
-    this.gl.bindTexture(this.gl.TEXTURE_2D, THE_TEXTURE);  
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.THE_TEXTURE);  
     this.gl.uniform1i(this.shaderProgram.samplerUniform, 0);
 
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
@@ -171,11 +186,15 @@ GLPainter.prototype.init = function(canvasid) {
     try {
         var canvas = document.getElementById(canvasid);
         this.gl = canvas.getContext("experimental-webgl");
+        //this.gl = canvas.getContext("webgl");
         this.gl.viewportWidth = canvas.width;
         this.gl.viewportHeight = canvas.height;
+        this.canvas = canvas;
     } catch (e) {
+        alert("Failed to initialize GL-context");
+        return;
     }
-    
+
     this.init_shaders();
     this.init_buffers();
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -186,6 +205,12 @@ GLPainter.prototype.init = function(canvasid) {
         return false;
     }
     return true;
+}
+
+GLPainter.prototype.onresize = function() {
+    this.gl.viewportWidth = this.canvas.clientWidth;
+    this.gl.viewportHeight = this.canvas.clientHeight;
+    this.draw_image();
 }
 
 GLPainter.prototype.compile_shader = function(str, shader_type) {

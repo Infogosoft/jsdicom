@@ -44,6 +44,12 @@
 
 
     $(document).ready(function() {
+        // Set size of canvas with js, otherwise css-scaling will be done
+        var container = document.getElementById('view-area');
+        var c = document.getElementById('c1');
+        c.width = container.clientWidth - 20;
+        c.height = container.clientHeight - 20;
+
         app.init();
         $("input[type=file]").change(function(evt) {
             //app.load_files(evt);
@@ -121,7 +127,7 @@
         }
 
         // Setup the dnd listeners.
-        var dropZone = document.getElementById('dropbox');
+        var dropZone = document.getElementById('filebox');
         dropZone.addEventListener('dragover', handleDragOver, false);
         dropZone.addEventListener('drop', handleFileSelect, false);
         //webGLStart();
@@ -137,7 +143,7 @@
             <ul id="series-selection"></ul>
         </div>
     </div>
-    <div id="canvas-holder" class="box">
+    <div id="viewer" class="box">
         <h2>Viewer</h2>
         <div id="viewer-bar">
             <div id="view-metadata" class="tool-button">Metadata</div>
@@ -153,24 +159,21 @@
                 <optgroup label="Window presets">
                 </optgroup>
             </select>
-        </div>
-
-        <div id="slider-holder">
-            <div id="slider"></div>
-        </div>
-        <div id="view-area">
-            <canvas id="c1" width="512" height="512" class="front"></canvas>
-        </div>
-    </div>
-    <div id="right-sidebar">
-        <div id="tool-box" class="box">
-            <h2>Tools</h2>
-            <div id="button-bar-vert">
+            <div id="button-bar-horz">
                 <div id="butt-measure" class="tool-button">Measure</div>
                 <div id="butt-windowing" class="tool-button butt-selected">Windowing</div>
                 <div id="butt-zooming" class="tool-button">Zoom/Pan</div>
             </div>
         </div>
+
+        <div id="view-area">
+            <div class="slider-holder">
+                <div id="slider"></div>
+            </div>
+            <canvas id="c1"></canvas>
+        </div>
+    </div>
+    <div id="right-sidebar">
         <div style="clear: both;"></div>
         <div class="box">
             <h2>Data</h2>
@@ -178,10 +181,6 @@
             <div id="info" >
               Density: <div id="density"></div>
             </div>
-        </div>
-        <div class="box">
-            <h2>Dropbox</h2>
-            <p id="dropbox" class="infotext">Drop files here</p>
         </div>
     </div>
     <!-- Dialogs -->
