@@ -46,7 +46,6 @@ DcmApp.prototype.load_files = function(files)
         value: 0,
         max: files.length-1,
         slide: function(ui, event) {
-            console.log("slide, val = " + event.value);
             app.curr_file_idx = event.value; //$(this).slider('value');
             app.curr_tool.set_file(app.files[app.curr_file_idx]);
             app.draw_image();
@@ -226,10 +225,7 @@ DcmApp.prototype.draw_image = function() {
     var curr_file = this.files[this.curr_file_idx];
     if(curr_file == undefined)
         return;
-    if($( ".selector" ).slider( "option", "value" ) != this.curr_file_idx) {
-        console.log("draw image, idx = " + this.curr_file_idx);
-        $("#slider").slider("option", "value", this.curr_file_idx);
-    }
+    $("#slider").slider("option", "value", this.curr_file_idx);
     this.painter.set_file(curr_file);
     this.painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
     this.painter.draw_image();
