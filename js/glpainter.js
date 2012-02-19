@@ -37,6 +37,7 @@ GLPainter.prototype.set_file = function(dcmfile) {
     var internalFormat;
     switch(jQuery.trim(dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
     case "MONOCHROME1":
+        // TODO: MONOCHROME1 should use inverse cluts.
     case "MONOCHROME2":
         if(dcmfile.get_element(dcmdict["BitsStored"]).get_value() <= 8) {
             internalFormat = this.gl.LUMINANCE;

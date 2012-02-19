@@ -31,7 +31,7 @@
     var app = new DcmApp('c1');
 
     function testscroll(i, len) {
-        if(i >= len-1)
+        if(i > len-1)
             return;
         app.curr_file_idx = i;
         app.draw_image();
