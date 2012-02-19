@@ -15,8 +15,8 @@ $(document).ready(function(){
         equal(element.vr, "OW", "vr");
         equal(element.tag.toString(16), 0x7fe00010.toString(16), "tag");
         var value = element.get_value();
-        equal(value(0).toString(16), 0x1234.toString(16), "value(0)");
-        equal(value(1).toString(16), 0x5678.toString(16), "value(1)");
+        equal(value[0].toString(16), 0x1234.toString(16), "value[0]");
+        equal(value[1].toString(16), 0x5678.toString(16), "value[1]");
         equal(offset, 12, "offset");
     });
 
@@ -33,8 +33,8 @@ $(document).ready(function(){
         equal(element.vl, 4, "vl");
         equal(element.tag.toString(16), 0x7fe00010.toString(16), "tag");
         var value = element.get_value();
-        equal(value(0).toString(16), 0x1234.toString(16), "value(0)");
-        equal(value(1).toString(16), 0x5678.toString(16), "value(1)");
+        equal(value[0].toString(16), 0x1234.toString(16), "value[0]");
+        equal(value[1].toString(16), 0x5678.toString(16), "value[1]");
         equal(offset, 16, "offset");
     });
 
@@ -51,8 +51,8 @@ $(document).ready(function(){
         equal(element.vl, 4, "vl");
         equal(element.tag.toString(16), 0x7fe00010.toString(16), "tag");
         var value = element.get_value();
-        equal(value(0).toString(16), 0x1234.toString(16), "value(0)");
-        equal(value(1).toString(16), 0x5678.toString(16), "value(1)");
+        equal(value[0].toString(16), 0x1234.toString(16), "value[0]");
+        equal(value[1].toString(16), 0x5678.toString(16), "value[1]");
         equal(offset, 16, "offset");
     });
 });

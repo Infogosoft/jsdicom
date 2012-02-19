@@ -19,7 +19,8 @@ function DcmApp(canvasid) {
 
     this.canvasid = canvasid;
 
-    this.last_mouse_pos = [-1,-1];
+    this.last_mouse_canvas_pos = [-1,-1];
+    this.last_mouse_image_pos = [-1,-1];
     this.mouse_down = false;
 
     this.series = {};
@@ -253,21 +254,41 @@ DcmApp.prototype.activate_zoom_pan = function() {
     this.curr_tool.set_file(this.files[this.curr_file_idx]);
 }
 
-DcmApp.prototype.mousemoveinfo = function(row, col) {
+DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
     if (this.files.length <= this.curr_file_idx) {
         $("#density").html("");
         return;
     }
+
+    console.log(canvas_pos + " -> " + image_pos);
+
     var curr_file = this.files[this.curr_file_idx];
     if (curr_file == undefined)
         return;
+
+    var canvas = document.getElementById(this.canvasid);
+    var manual_pos = [0,0];
+    var pan = this.painter.get_pan();
+    var s = this.painter.get_scale();
+    var ih = curr_file.rows;
+    var iw = curr_file.columns;
+    var cw = canvas.clientWidth;
+    var ch = canvas.clientHeight;
+
+    manual_pos[0] = (-4*iw*pan[0] + 2*cw*iw + 4*ch*iw*s)/(8*ch*s) - canvas_pos[0]*iw/(2*ch*s)
+    manual_pos[1] = (ch*ih - 2*ih*pan[1] + ch*ih*s)/(2*ch*s) - canvas_pos[1]*ih/(ch*s)
+    console.log(" --- " + manual_pos);
+    row = image_pos[0];
+    col = image_pos[1];
+
     var coord = curr_file.getPatientCoordinate(row,col);
-    var ctval = curr_file.getCTValue(row, col);
-    if (ctval == undefined) {
-        $("#density").html("");
-        return;
-    }
-    $("#density").html("rho(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1) + " HU");
+    //var ctval = curr_file.getCTValue(row, col);
+    //if (ctval == undefined) {
+    //    $("#density").html("");
+    //    return;
+    //}
+    //$("#density").html("rho(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1) + " HU");
+    $("#density").html("r,c = (" + row + ", " + col + ")");
 }
 
 DcmApp.prototype.set_clut = function(clutname) {
@@ -292,8 +313,7 @@ DcmApp.prototype.set_clut = function(clutname) {
 }
 
 DcmApp.prototype.refreshmousemoveinfo = function() {
-    var canvas = document.getElementById(this.canvasid);
-    this.mousemoveinfo(this.last_mouse_pos[0] - canvas.offsetLeft, this.last_mouse_pos[1] - canvas.offsetTop);
+    this.mousemoveinfo(this.last_mouse_canvas_pos, this.last_mouse_image_pos);
 }
 
 DcmApp.prototype.update_window_preset_list = function(wls, wws) { 
@@ -311,6 +331,13 @@ DcmApp.prototype.set_window_preset = function(value) {
     this.draw_image();
 }
 
+DcmApp.prototype.rel_pos_from_event = function(evt) {
+    var rel_pos = [-1, -1];
+    rel_pos[0] = Math.floor(evt.pageX - $(evt.target).offset().left);
+    rel_pos[1] = Math.floor(evt.pageY - $(evt.target).offset().top);
+    return rel_pos;
+}
+
 DcmApp.prototype.init = function() {
     var canvas = document.getElementById(this.canvasid);
     var app = this;
@@ -318,23 +345,29 @@ DcmApp.prototype.init = function() {
     //this.painter = new CanvasPainter();
     this.painter.init(this.canvasid);
     canvas.onmousemove = function(evt) {
+        app.last_mouse_canvas_pos = app.rel_pos_from_event(evt);
+        app.last_mouse_image_pos = app.painter.unproject(app.last_mouse_canvas_pos);
         if (app.curr_tool.mousemove !== undefined)
-            app.curr_tool.mousemove(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
-        app.last_mouse_pos[0] = evt.clientX;
-        app.last_mouse_pos[1] = evt.clientY;
-        //app.refreshmousemoveinfo();
+            app.curr_tool.mousemove(app.last_mouse_canvas_pos, app.last_mouse_image_pos);
+        app.refreshmousemoveinfo();
         return;
     }
 
     canvas.onmousedown = function(evt) {
-        if (app.curr_tool.mousedown !== undefined)
-            app.curr_tool.mousedown(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
+        if (app.curr_tool.mousedown !== undefined) {
+            var canvas_pos = app.rel_pos_from_event(evt);
+            image_pos = app.painter.unproject(canvas_pos);
+            app.curr_tool.mousedown(canvas_pos, image_pos);
+        }
         app.mouse_down = true;
     }
 
     canvas.onmouseup = function(evt) {
-        if (app.curr_tool.mouseup !== undefined)
-            app.curr_tool.mouseup(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
+        if (app.curr_tool.mouseup !== undefined) {
+            var canvas_pos = app.rel_pos_from_event(evt);
+            image_pos = app.painter.unproject(canvas_pos);
+            app.curr_tool.mouseup(canvas_pos, image_pos);
+        }
         app.mouse_down = false;
     }
 
@@ -343,8 +376,11 @@ DcmApp.prototype.init = function() {
     }
 
     canvas.onclick = function(evt) {
-        if (app.curr_tool.click !== undefined)
-            app.curr_tool.click(evt.clientX - this.offsetLeft, evt.clientY - this.offsetTop);
+        if (app.curr_tool.click !== undefined) {
+            var canvas_pos = app.rel_pos_from_event(evt);
+            image_pos = app.painter.unproject(canvas_pos);
+            app.curr_tool.click(canvas_pos, image_pos);
+        }
     }
     canvas.addEventListener('DOMMouseScroll', function(evt) {
         if (app.curr_tool.scroll !== undefined)

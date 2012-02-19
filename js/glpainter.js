@@ -30,6 +30,8 @@ GLPainter.prototype.is_supported = function() {
 GLPainter.prototype.set_file = function(dcmfile) {
     this.rs=dcmfile.rescaleSlope;
     this.ri=dcmfile.rescaleIntercept;
+    this.rows = dcmfile.rows;
+    this.columns = dcmfile.columns;
     var internalFormat;
     switch(jQuery.trim(dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
     case "MONOCHROME1":
@@ -146,10 +148,39 @@ GLPainter.prototype.detach_shaders = function() {
     this.shaderProgram.activeFragmentShader = null;
 }
 
-GLPainter.prototype.draw_image = function() {
-    this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+GLPainter.prototype.unproject = function(canvas_pos) {
+    var viewportArray = [
+        0, 0, this.gl.viewportWidth, this.gl.viewportHeight
+    ];
+    
+    var modelPointArrayResultsNear = [];
+    var modelPointArrayResultsFar = [];
+    
+    var successNear = GLU.unProject(
+        canvas_pos[0], canvas_pos[1], 0.0, //windowPointX, windowPointY, windowPointZ,
+        this.mvMatrix, this.pMatrix,
+        viewportArray, modelPointArrayResultsNear);
+    
+    var successFar = GLU.unProject(
+        canvas_pos[0], canvas_pos[1], 1.0, //windowPointX, windowPointY, windowPointZ,
+        this.mvMatrix, this.pMatrix,
+        viewportArray, modelPointArrayResultsFar);
 
+    // var imagePlaneZ = 0.0;
+    
+    var x0 = modelPointArrayResultsNear[0];
+    var y0 = modelPointArrayResultsNear[1];
+    var z0 = modelPointArrayResultsNear[2];
+    var x1 = modelPointArrayResultsFar[0];
+    var y1 = modelPointArrayResultsFar[1];
+    var z1 = modelPointArrayResultsFar[2];
+    var imX = (z0*x1-z1*x0)/(z1-z0);
+    var imY = (z0*y1-z1*y0)/(z1-z0);
+
+    return [Math.floor((imX+1)/2*this.columns), Math.floor((imY+1)/2*this.rows)];
+}
+
+GLPainter.prototype.update_projection_matrix = function() {
     mat4.perspective(this.fovy, this.gl.viewportWidth / this.gl.viewportHeight, 0.1, 100.0, this.pMatrix);
     mat4.identity(this.mvMatrix);
     mat4.translate(this.mvMatrix, [this.pan[0], -this.pan[1], -1]);
@@ -160,6 +191,13 @@ GLPainter.prototype.draw_image = function() {
         var canvas_scale = this.canvas.width/this.canvas.height;
         mat4.scale(this.mvMatrix, [canvas_scale,canvas_scale,canvas_scale]);
     }
+}
+
+GLPainter.prototype.draw_image = function() {
+    this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+    this.update_projection_matrix();
 
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
     this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, 

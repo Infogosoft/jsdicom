@@ -15,7 +15,8 @@ function MeasureTool(app) {
     this.currX;
     this.currY;
 
-    this.click = function(x, y) {
+    this.click = function(canvas_pos, image_pos) {
+        x = canvas_pos[0]; y = canvas_pos[1];
         if(this.in_motion) {
             this.in_motion = false;
             // Add line drawing obj to file
@@ -29,7 +30,8 @@ function MeasureTool(app) {
         }
     }
 
-    this.mousemove = function(x, y) {
+    this.mousemove = function(canvas_pos, image_pos) {
+        x = canvas_pos[0]; y = canvas_pos[1];
         if(this.in_motion) {
             this.currX = x;
             this.currY = y;
@@ -76,15 +78,16 @@ function WindowLevelTool(app) {
     this.scroll = function(detail) {
         this.app.set_slice_idx(this.app.get_slice_idx() + detail);
     }
-    this.mousedown = function(x, y) {
+    this.mousedown = function(canvas_pos, image_pos) {
         this.is_mouse_down = true;
     }
 
-    this.mouseup = function(x, y) {
+    this.mouseup = function(canvas_pos, image_pos) {
         this.is_mouse_down = false;
     }
 
-    this.mousemove = function(x, y) {
+    this.mousemove = function(canvas_pos, image_pos) {
+        x = canvas_pos[0]; y = canvas_pos[1];
         if(this.is_mouse_down) {
             var curr_windowing = this.app.get_windowing();
             var xdiff = x - this.last_mouse_pos_x;
@@ -98,7 +101,7 @@ function WindowLevelTool(app) {
     this.postdraw = function(canvas) {
     }
 
-    this.click = function(x, y) {
+    this.click = function(canvas_pos, image_pos) {
     }
 
     this.set_file = function(file) {
@@ -115,22 +118,23 @@ function ZoomPanTool(app) {
         this.app.set_scale(this.app.get_scale() + detail/100.0);
     }
 
-    this.mousedown = function(x, y) {
+    this.mousedown = function(canvas_pos, image_pos) {
         this.is_mouse_down = true;
-        this.last_mouse_pos_x = y;
-        this.last_mouse_pos_y = y;
+        this.last_mouse_pos_x = canvas_pos[0];
+        this.last_mouse_pos_y = canvas_pos[1];
     }
 
-    this.mouseup = function(x, y) {
+    this.mouseup = function(canvas_pos, image_pos) {
         this.is_mouse_down = false;
     }
 
-    this.mousemove = function(x, y) {
+    this.mousemove = function(canvas_pos, image_pos) {
+        x = canvas_pos[0]; y = canvas_pos[1];
         if(this.is_mouse_down) {
             var xdiff = (this.mouse_down_pos_x - x);
             var ydiff = (this.mouse_down_pos_y - y);
-            xdiff /= 100.0;
-            ydiff /= 100.0;
+            xdiff /= 256.0;
+            ydiff /= 256.0;
             var curr_pan = app.get_pan();
             app.set_pan(curr_pan[0] - xdiff, curr_pan[1] - ydiff);
         }
@@ -141,7 +145,7 @@ function ZoomPanTool(app) {
     this.postdraw = function(canvas) {
     }
 
-    this.click = function(x, y) {
+    this.click = function(canvas_pos, image_pos) {
     }
 
     this.set_file = function(file) {
