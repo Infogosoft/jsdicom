@@ -146,7 +146,7 @@ td {
 #metadata-table {
     font-size: 10px;
     height: 500px;
-    width: 536px;
+    width: 584px;
     display: block;
     overflow: auto;
 }
@@ -227,6 +227,31 @@ tr.even {
     padding: 3px 13px;
     position: relative;
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.7);
+}
+
+#dcminfo1 {
+    position: absolute;
+    top: 66px;
+    color: white;
+    font-size: 14px;
+}
+
+#dcminfo1 ul {
+    padding-left: 18px;
+}
+#dcminfo1 li {
+    list-style: none;
+    padding-left: 0px;
+}
+
+#dcminfo1 li p {
+    float: left;
+    padding: 0px;
+    margin: 0px;
+}
+
+.img-info-label {
+    width: 50px;
 }
 
 /* Transition stuffs */

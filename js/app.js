@@ -16,8 +16,8 @@ function log_element(elem_repr) {
 
 
 function DcmApp(canvasid) {
-
     this.canvasid = canvasid;
+    this.painter;
 
     this.last_mouse_pos = [-1,-1];
     this.mouse_down = false;
@@ -183,6 +183,8 @@ DcmApp.prototype.get_scale = function(scale) {
 }
 
 DcmApp.prototype.set_windowing = function(wl, ww) {
+    $("#ww_info").text(ww);
+    $("#wl_info").text(wl);
     return this.painter.set_windowing(wl, ww);
 }
 
@@ -295,6 +297,7 @@ DcmApp.prototype.init = function() {
     var canvas = document.getElementById(this.canvasid);
     var app = this;
     this.painter = new GLPainter();
+    this.painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
     //this.painter = new CanvasPainter();
     this.painter.init(this.canvasid);
     canvas.onmousemove = function(evt) {
