@@ -19,8 +19,8 @@ function DcmApp(canvasid) {
     this.canvasid = canvasid;
     this.painter;
 
-    this.last_mouse_canvas_pos = [-1,-1];
-    this.last_mouse_image_pos = [-1,-1];
+    this.last_mouse_canvas_pos = [NaN,NaN];
+    this.last_mouse_image_pos = [NaN,NaN];
     this.mouse_down = false;
 
     this.series = {};
@@ -188,6 +188,8 @@ DcmApp.prototype.set_series = function(series_uid) {
 
 DcmApp.prototype.set_pan = function(panx, pany) {
     this.painter.set_pan(panx, pany);
+    this.last_mouse_image_pos = this.painter.unproject(this.last_mouse_canvas_pos);
+    this.refreshmousemoveinfo();
 }
 
 DcmApp.prototype.get_pan = function(pan) {
@@ -196,6 +198,8 @@ DcmApp.prototype.get_pan = function(pan) {
 
 DcmApp.prototype.set_scale = function(scale) {
     this.painter.set_scale(scale);
+    this.last_mouse_image_pos = this.painter.unproject(this.last_mouse_canvas_pos);
+    this.refreshmousemoveinfo();
 }
 
 DcmApp.prototype.get_scale = function(scale) {
@@ -217,7 +221,6 @@ DcmApp.prototype.set_slice_idx = function(idx) {
         return;
     this.curr_file_idx = idx;
     this.draw_image();
-
 }
 
 DcmApp.prototype.get_slice_idx = function() {
@@ -262,14 +265,13 @@ DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
         return;
     }
 
-    console.log(canvas_pos + " -> " + image_pos);
-
     var curr_file = this.files[this.curr_file_idx];
     if (curr_file == undefined)
         return;
 
-    row = image_pos[0];
-    col = image_pos[1];
+    var rowcol = this.painter.image_coords_to_row_column(image_pos);
+    var row = rowcol[0];
+    var col = rowcol[1];
 
     var coord = curr_file.getPatientCoordinate(row,col);
     var ctval = curr_file.getCTValue(row, col);

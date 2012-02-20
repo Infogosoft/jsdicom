@@ -121,10 +121,13 @@ function ZoomPanTool(app) {
     this.mousedown = function(canvas_pos, image_pos) {
         this.is_mouse_down = true;
         var file = app.files[app.curr_file_idx];
-        x = 2*(image_pos[0] / file.rows)-1; y = 2*(image_pos[1] / file.columns)-1;
-        this.mouse_down_pos_x = x;
-        this.mouse_down_pos_y = y;
-        this.orig_pan = app.get_pan();
+        this.mouse_down_pos = canvas_pos;
+        this.orig_pan = [0,0];
+        var op = app.get_pan();
+        this.orig_pan[0] = op[0];
+        this.orig_pan[1] = op[1];
+        // TODO: this should be the painter's (or perhaps the app's) responsibility
+        this.pixel_size = 2.0/app.painter.gl.viewportHeight;
     }
 
     this.mouseup = function(canvas_pos, image_pos) {
@@ -132,12 +135,13 @@ function ZoomPanTool(app) {
     }
 
     this.mousemove = function(canvas_pos, image_pos) {
-        var file = app.files[app.curr_file_idx];
-        x = 2*(image_pos[0] / file.rows)-1; y = 2*(image_pos[1] / file.columns)-1;
         if(this.is_mouse_down) {
-            var xdiff = (this.mouse_down_pos_x - x);
-            var ydiff = (this.mouse_down_pos_y - y);
-            app.set_pan(this.orig_pan[0] - xdiff, this.orig_pan[1] - ydiff);
+            var xdiff = (this.mouse_down_pos[0] - canvas_pos[0]);
+            var ydiff = (this.mouse_down_pos[1] - canvas_pos[1]);
+            var pan = [0,0];
+            pan[0] += xdiff * this.pixel_size;
+            pan[1] += ydiff * this.pixel_size;
+            app.set_pan(this.orig_pan[0] - pan[0], this.orig_pan[1] - pan[1]);
         }
     }
 

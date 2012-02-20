@@ -111,7 +111,6 @@ GLPainter.prototype.reset_scale = function(scale) {
 GLPainter.prototype.set_pan = function(panx, pany) {
     this.pan[0] = panx;
     this.pan[1] = pany;
-    console.log("set_pan(" + this.pan + ")");
     this.draw_image();
 }
 
@@ -215,7 +214,16 @@ GLPainter.prototype.unproject = function(canvas_pos) {
         flippedmvMatrix, this.pMatrix,
         viewportArray, unprojectedPoint);
 
-    return [Math.floor((unprojectedPoint[0]+1)/2*this.columns), Math.floor((unprojectedPoint[1]+1)/2*this.rows)];
+    return unprojectedPoint;
+}
+
+GLPainter.prototype.image_coords_to_row_column = function(pt) {
+    return [Math.round((pt[0]+1)/2*this.columns), Math.round((pt[1]+1)/2*this.rows)]
+}
+
+GLPainter.prototype.unproject_row_column = function(canvas_pos) {
+    var unprojectedPoint = this.unproject(canvas_pos);
+    return image_coords_to_row_column(unprojectedPoint);;
 }
 
 GLPainter.prototype.update_projection_matrix = function() {
