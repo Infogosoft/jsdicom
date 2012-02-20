@@ -92,7 +92,7 @@ function WindowLevelTool(app) {
             var curr_windowing = this.app.get_windowing();
             var xdiff = x - this.last_mouse_pos_x;
             var ydiff = y - this.last_mouse_pos_y
-            app.set_windowing(curr_windowing[0] + xdiff, curr_windowing[1] + ydiff);
+            app.set_windowing(curr_windowing[0] + xdiff, Math.max(curr_windowing[1] + ydiff, 0));
         }
         this.last_mouse_pos_x = x;
         this.last_mouse_pos_y = y;
