@@ -59,13 +59,14 @@ function DcmFile() {
     this.getCTValue = function(col, row) {
         if(col < 0 || col >= this.columns || row < 0 || row >= this.rows)
             return undefined;
-        var data_idx = (col + row*this.columns)*2;
-        var intensity = this.pixel_data[data_idx+1]*256.0 + this.pixel_data[data_idx];
-        intensity = intensity * this.rescaleSlope + this.rescaleIntercept;
+        var data_idx = (col + row*this.columns);
+        var intensity = this.pixel_data[data_idx] * this.rescaleSlope + this.rescaleIntercept;
         return intensity;
     }
 
     this.getPatientCoordinate = function(col, row) {
+        if (this.imagePosition == undefined || this.imageOrientationColumn == undefined || this.imageOrientationRow == undefined)
+            return undefined;
         return [this.imagePosition[0] + row * this.imageOrientationRow[0] + col * this.imageOrientationColumn[0],
                 this.imagePosition[1] + row * this.imageOrientationRow[1] + col * this.imageOrientationColumn[1],
                 this.imagePosition[2] + row * this.imageOrientationRow[2] + col * this.imageOrientationColumn[2]];

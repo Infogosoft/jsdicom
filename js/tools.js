@@ -15,7 +15,8 @@ function MeasureTool(app) {
     this.currX;
     this.currY;
 
-    this.click = function(x, y) {
+    this.click = function(canvas_pos, image_pos) {
+        x = canvas_pos[0]; y = canvas_pos[1];
         if(this.in_motion) {
             this.in_motion = false;
             // Add line drawing obj to file
@@ -29,7 +30,8 @@ function MeasureTool(app) {
         }
     }
 
-    this.mousemove = function(x, y) {
+    this.mousemove = function(canvas_pos, image_pos) {
+        x = canvas_pos[0]; y = canvas_pos[1];
         if(this.in_motion) {
             this.currX = x;
             this.currY = y;
@@ -76,15 +78,16 @@ function WindowLevelTool(app) {
     this.scroll = function(detail) {
         this.app.set_slice_idx(this.app.get_slice_idx() + detail);
     }
-    this.mousedown = function(x, y) {
+    this.mousedown = function(canvas_pos, image_pos) {
         this.is_mouse_down = true;
     }
 
-    this.mouseup = function(x, y) {
+    this.mouseup = function(canvas_pos, image_pos) {
         this.is_mouse_down = false;
     }
 
-    this.mousemove = function(x, y) {
+    this.mousemove = function(canvas_pos, image_pos) {
+        x = canvas_pos[0]; y = canvas_pos[1];
         if(this.is_mouse_down) {
             var curr_windowing = this.app.get_windowing();
             var xdiff = x - this.last_mouse_pos_x;
@@ -98,7 +101,7 @@ function WindowLevelTool(app) {
     this.postdraw = function(canvas) {
     }
 
-    this.click = function(x, y) {
+    this.click = function(canvas_pos, image_pos) {
     }
 
     this.set_file = function(file) {
@@ -115,33 +118,37 @@ function ZoomPanTool(app) {
         this.app.set_scale(this.app.get_scale() + detail/100.0);
     }
 
-    this.mousedown = function(x, y) {
+    this.mousedown = function(canvas_pos, image_pos) {
         this.is_mouse_down = true;
-        this.last_mouse_pos_x = y;
-        this.last_mouse_pos_y = y;
+        var file = app.files[app.curr_file_idx];
+        this.mouse_down_pos = canvas_pos;
+        this.orig_pan = [0,0];
+        var op = app.get_pan();
+        this.orig_pan[0] = op[0];
+        this.orig_pan[1] = op[1];
+        // TODO: this should be the painter's (or perhaps the app's) responsibility
+        this.pixel_size = 2.0/app.painter.gl.viewportHeight;
     }
 
-    this.mouseup = function(x, y) {
+    this.mouseup = function(canvas_pos, image_pos) {
         this.is_mouse_down = false;
     }
 
-    this.mousemove = function(x, y) {
+    this.mousemove = function(canvas_pos, image_pos) {
         if(this.is_mouse_down) {
-            var xdiff = (this.mouse_down_pos_x - x);
-            var ydiff = (this.mouse_down_pos_y - y);
-            xdiff /= 100.0;
-            ydiff /= 100.0;
-            var curr_pan = app.get_pan();
-            app.set_pan(curr_pan[0] - xdiff, curr_pan[1] - ydiff);
+            var xdiff = (this.mouse_down_pos[0] - canvas_pos[0]);
+            var ydiff = (this.mouse_down_pos[1] - canvas_pos[1]);
+            var pan = [0,0];
+            pan[0] += xdiff * this.pixel_size;
+            pan[1] += ydiff * this.pixel_size;
+            app.set_pan(this.orig_pan[0] - pan[0], this.orig_pan[1] - pan[1]);
         }
-        this.mouse_down_pos_x = x;
-        this.mouse_down_pos_y = y;
     }
 
     this.postdraw = function(canvas) {
     }
 
-    this.click = function(x, y) {
+    this.click = function(canvas_pos, image_pos) {
     }
 
     this.set_file = function(file) {

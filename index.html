@@ -13,6 +13,7 @@
     <script type="text/javascript" src="jquery/js/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
 
+    <script type="text/javascript" src="js/GLU.js"></script>
     <script type="text/javascript" src="js/dcmdict.js"></script>
     <script type="text/javascript" src="js/cluts/plain.js"></script>
     <script type="text/javascript" src="js/cluts/rainbow.js"></script>
@@ -164,6 +165,9 @@
                 <div id="butt-windowing" class="tool-button butt-selected">Windowing</div>
                 <div id="butt-zooming" class="tool-button">Zoom/Pan</div>
             </div>
+            <div id="info" >
+              Density: <div id="density"></div>
+            </div>
         </div>
 
         <div id="view-area">
@@ -196,9 +200,6 @@
         <div class="box">
             <h2>Data</h2>
             <div id="dicomheader"></div>
-            <div id="info" >
-              Density: <div id="density"></div>
-            </div>
         </div>
     </div>
     <!-- Dialogs -->

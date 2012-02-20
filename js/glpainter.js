@@ -34,6 +34,8 @@ GLPainter.prototype.is_supported = function() {
 GLPainter.prototype.set_file = function(dcmfile) {
     this.rs=dcmfile.rescaleSlope;
     this.ri=dcmfile.rescaleIntercept;
+    this.rows = dcmfile.rows;
+    this.columns = dcmfile.columns;
     var internalFormat;
     switch(jQuery.trim(dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
     case "MONOCHROME1":
@@ -182,10 +184,49 @@ GLPainter.prototype.detach_shaders = function() {
     this.shaderProgram.activeFragmentShader = null;
 }
 
-GLPainter.prototype.draw_image = function() {
-    this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+GLPainter.prototype.unproject = function(canvas_pos) {
+    var viewportArray = [
+        0, 0, this.gl.viewportWidth, this.gl.viewportHeight
+    ];
+    
+    var projectedPoint = [];
+    var unprojectedPoint = [];
+    
+    var flippedmvMatrix = mat4.create();
 
+    mat4.identity(flippedmvMatrix);
+    mat4.translate(flippedmvMatrix, [this.pan[0], this.pan[1], -1]);
+    mat4.scale(flippedmvMatrix, [this.scale,this.scale,this.scale]);
+
+    // Hack to fit image if height is greater than width
+    if(this.canvas.height > this.canvas.width) {
+        var canvas_scale = this.canvas.width/this.canvas.height;
+        mat4.scale(flippedmvMatrix, [canvas_scale,canvas_scale,canvas_scale]);
+    }
+
+    GLU.project(
+        0,0,0,
+        flippedmvMatrix, this.pMatrix,
+        viewportArray, projectedPoint);
+    
+    var successFar = GLU.unProject(
+        canvas_pos[0], canvas_pos[1], projectedPoint[2], //windowPointX, windowPointY, windowPointZ,
+        flippedmvMatrix, this.pMatrix,
+        viewportArray, unprojectedPoint);
+
+    return unprojectedPoint;
+}
+
+GLPainter.prototype.image_coords_to_row_column = function(pt) {
+    return [Math.round((pt[0]+1)/2*this.columns), Math.round((pt[1]+1)/2*this.rows)]
+}
+
+GLPainter.prototype.unproject_row_column = function(canvas_pos) {
+    var unprojectedPoint = this.unproject(canvas_pos);
+    return image_coords_to_row_column(unprojectedPoint);;
+}
+
+GLPainter.prototype.update_projection_matrix = function() {
     mat4.perspective(this.fovy, this.gl.viewportWidth / this.gl.viewportHeight, 0.1, 100.0, this.pMatrix);
     mat4.identity(this.mvMatrix);
     mat4.translate(this.mvMatrix, [this.pan[0], -this.pan[1], -1]);
@@ -196,6 +237,13 @@ GLPainter.prototype.draw_image = function() {
         var canvas_scale = this.canvas.width/this.canvas.height;
         mat4.scale(this.mvMatrix, [canvas_scale,canvas_scale,canvas_scale]);
     }
+}
+
+GLPainter.prototype.draw_image = function() {
+    this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+    this.update_projection_matrix();
 
 
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
