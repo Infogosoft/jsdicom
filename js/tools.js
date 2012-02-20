@@ -120,8 +120,11 @@ function ZoomPanTool(app) {
 
     this.mousedown = function(canvas_pos, image_pos) {
         this.is_mouse_down = true;
-        this.last_mouse_pos_x = canvas_pos[0];
-        this.last_mouse_pos_y = canvas_pos[1];
+        var file = app.files[app.curr_file_idx];
+        x = 2*(image_pos[0] / file.rows)-1; y = 2*(image_pos[1] / file.columns)-1;
+        this.mouse_down_pos_x = x;
+        this.mouse_down_pos_y = y;
+        this.orig_pan = app.get_pan();
     }
 
     this.mouseup = function(canvas_pos, image_pos) {
@@ -129,17 +132,13 @@ function ZoomPanTool(app) {
     }
 
     this.mousemove = function(canvas_pos, image_pos) {
-        x = canvas_pos[0]; y = canvas_pos[1];
+        var file = app.files[app.curr_file_idx];
+        x = 2*(image_pos[0] / file.rows)-1; y = 2*(image_pos[1] / file.columns)-1;
         if(this.is_mouse_down) {
             var xdiff = (this.mouse_down_pos_x - x);
             var ydiff = (this.mouse_down_pos_y - y);
-            xdiff /= 256.0;
-            ydiff /= 256.0;
-            var curr_pan = app.get_pan();
-            app.set_pan(curr_pan[0] - xdiff, curr_pan[1] - ydiff);
+            app.set_pan(this.orig_pan[0] - xdiff, this.orig_pan[1] - ydiff);
         }
-        this.mouse_down_pos_x = x;
-        this.mouse_down_pos_y = y;
     }
 
     this.postdraw = function(canvas) {

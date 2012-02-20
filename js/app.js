@@ -266,29 +266,21 @@ DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
     if (curr_file == undefined)
         return;
 
-    var canvas = document.getElementById(this.canvasid);
-    var manual_pos = [0,0];
-    var pan = this.painter.get_pan();
-    var s = this.painter.get_scale();
-    var ih = curr_file.rows;
-    var iw = curr_file.columns;
-    var cw = canvas.clientWidth;
-    var ch = canvas.clientHeight;
-
-    manual_pos[0] = (-4*iw*pan[0] + 2*cw*iw + 4*ch*iw*s)/(8*ch*s) - canvas_pos[0]*iw/(2*ch*s)
-    manual_pos[1] = (ch*ih - 2*ih*pan[1] + ch*ih*s)/(2*ch*s) - canvas_pos[1]*ih/(ch*s)
-    console.log(" --- " + manual_pos);
     row = image_pos[0];
     col = image_pos[1];
 
     var coord = curr_file.getPatientCoordinate(row,col);
-    //var ctval = curr_file.getCTValue(row, col);
-    //if (ctval == undefined) {
-    //    $("#density").html("");
-    //    return;
-    //}
-    //$("#density").html("rho(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1) + " HU");
-    $("#density").html("r,c = (" + row + ", " + col + ")");
+    var ctval = curr_file.getCTValue(row, col);
+    if (ctval == undefined) {
+        $("#density").html("");
+        return;
+    }
+    
+    if (coord != undefined) {
+        $("#density").html("value(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1));
+    } else {
+        $("#density").html("r,c = (" + row + ", " + col + "), val = " + ctval);
+    }
 }
 
 DcmApp.prototype.set_clut = function(clutname) {

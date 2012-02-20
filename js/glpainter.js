@@ -107,6 +107,7 @@ GLPainter.prototype.reset_scale = function(scale) {
 GLPainter.prototype.set_pan = function(panx, pany) {
     this.pan[0] = panx;
     this.pan[1] = pany;
+    console.log("set_pan(" + this.pan + ")");
     this.draw_image();
 }
 
@@ -153,31 +154,32 @@ GLPainter.prototype.unproject = function(canvas_pos) {
         0, 0, this.gl.viewportWidth, this.gl.viewportHeight
     ];
     
-    var modelPointArrayResultsNear = [];
-    var modelPointArrayResultsFar = [];
+    var projectedPoint = [];
+    var unprojectedPoint = [];
     
-    var successNear = GLU.unProject(
-        canvas_pos[0], canvas_pos[1], 0.0, //windowPointX, windowPointY, windowPointZ,
-        this.mvMatrix, this.pMatrix,
-        viewportArray, modelPointArrayResultsNear);
+    var flippedmvMatrix = mat4.create();
+
+    mat4.identity(flippedmvMatrix);
+    mat4.translate(flippedmvMatrix, [this.pan[0], this.pan[1], -1]);
+    mat4.scale(flippedmvMatrix, [this.scale,this.scale,this.scale]);
+
+    // Hack to fit image if height is greater than width
+    if(this.canvas.height > this.canvas.width) {
+        var canvas_scale = this.canvas.width/this.canvas.height;
+        mat4.scale(flippedmvMatrix, [canvas_scale,canvas_scale,canvas_scale]);
+    }
+
+    GLU.project(
+        0,0,0,
+        flippedmvMatrix, this.pMatrix,
+        viewportArray, projectedPoint);
     
     var successFar = GLU.unProject(
-        canvas_pos[0], canvas_pos[1], 1.0, //windowPointX, windowPointY, windowPointZ,
-        this.mvMatrix, this.pMatrix,
-        viewportArray, modelPointArrayResultsFar);
+        canvas_pos[0], canvas_pos[1], projectedPoint[2], //windowPointX, windowPointY, windowPointZ,
+        flippedmvMatrix, this.pMatrix,
+        viewportArray, unprojectedPoint);
 
-    // var imagePlaneZ = 0.0;
-    
-    var x0 = modelPointArrayResultsNear[0];
-    var y0 = modelPointArrayResultsNear[1];
-    var z0 = modelPointArrayResultsNear[2];
-    var x1 = modelPointArrayResultsFar[0];
-    var y1 = modelPointArrayResultsFar[1];
-    var z1 = modelPointArrayResultsFar[2];
-    var imX = (z0*x1-z1*x0)/(z1-z0);
-    var imY = (z0*y1-z1*y0)/(z1-z0);
-
-    return [Math.floor((imX+1)/2*this.columns), Math.floor((imY+1)/2*this.rows)];
+    return [Math.floor((unprojectedPoint[0]+1)/2*this.columns), Math.floor((unprojectedPoint[1]+1)/2*this.rows)];
 }
 
 GLPainter.prototype.update_projection_matrix = function() {

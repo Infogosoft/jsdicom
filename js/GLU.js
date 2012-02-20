@@ -97,6 +97,51 @@ var GLU = {};
     };
 
     /**
+     * Project a screen point.
+     *
+     * @param {number} objX the object point for the x value.
+     * @param {number} objY the object point for the y value.
+     * @param {number} objZ the object point for the z value.
+     * @param {Array.<number>} model the model-view matrix.
+     * @param {Array.<number>} proj the projection matrix.
+     * @param {Array.<number>} view the viewport coordinate array.
+     * @param {Array.<number>} winPos the window point result.
+     */
+    $.project = function(objX, objY, objZ, model, proj, view, winPos) {
+
+        /** @type {Array.<number>} */
+        var inp = [
+            objX,
+            objY,
+            objZ,
+            1.0
+        ];
+
+        /** @type {Array.<number>} */
+        var finalMatrix = [];
+
+        $.multMatrices(model, proj, finalMatrix);
+
+        /** @type {Array.<number>} */
+        var out = [];
+
+        $.multMatrixVec(finalMatrix, inp, out);
+
+        /* Map to range 0 to 1 */
+        out[0] = (out[0] + 1) / 2;
+        out[1] = (out[1] + 1) / 2;
+        out[2] = (out[2] + 1) / 2;
+
+        /* Map x and y to window coordinates */
+        out[0] = out[0] * view[2] + view[0];
+        out[1] = out[1] * view[3] + view[1];
+
+        winPos[0] = out[0];
+        winPos[1] = out[1];
+        winPos[2] = out[2];
+    };
+
+    /**
      * Multiply the matrix by the specified vector.
      *
      * @param {Array.<number>} matrix the matrix.
