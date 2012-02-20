@@ -10,11 +10,15 @@ function GLPainter() {
     this.squareVertexPositionBuffer;
     this.vertexIndexBuffer;
     this.THE_TEXTURE;
+    this.CLUT_TEXTURE;
 
     this.ww = 200;
     this.wl = 40;
     this.rs = 1;
     this.ri = -1024;
+    this.clut_r;
+    this.clut_g;
+    this.clut_b;
     this.ztrans = -1;
     this.xtrans = 0.0;
     this.ytrans = 0.0;
@@ -120,8 +124,40 @@ GLPainter.prototype.reset_pan = function() {
     this.pan[1] = 0.0;
 }
 
-GLPainter.prototype.set_cluts = function(r_clut, g_clut, b_clut) {
-    // TODO: send cluts to shader as Uniform array
+GLPainter.prototype.set_cluts = function(clut_r, clut_g, clut_b) {
+    this.clut_r = clut_r;
+    this.clut_g = clut_g;
+    this.clut_b = clut_b;
+    if(!this.gl)
+        return;
+
+    console.log('settings cluts');
+    // Re-pack as rgb
+    var rgb_clut = new Uint8Array(256*3);
+    for(var i=0;i<256;++i) {
+        rgb_clut[i*3] = this.clut_r[i];
+        rgb_clut[i*3 + 1] = this.clut_g[i];
+        rgb_clut[i*3 + 2] = this.clut_b[i];
+    }
+
+    this.CLUT_TEXTURE = this.gl.createTexture();
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.CLUT_TEXTURE);
+    this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+    this.gl.texImage2D(this.gl.TEXTURE_2D,       // target
+                       0,                        // level
+                       this.gl.RGB,              // internalformat
+                       256,                      // width
+                       1,                        // height 
+                       0,                        // border
+                       this.gl.RGB,             // format
+                       this.gl.UNSIGNED_BYTE,    // type
+                       rgb_clut);                // data
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+
+    this.gl.bindTexture(this.gl.TEXTURE_2D, null);
 }
 
 GLPainter.prototype.set_windowing = function(wl, ww) {
@@ -201,6 +237,7 @@ GLPainter.prototype.draw_image = function() {
 
     this.update_projection_matrix();
 
+
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
     this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, 
                            this.squareVertexPositionBuffer.itemSize, 
@@ -216,9 +253,14 @@ GLPainter.prototype.draw_image = function() {
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.THE_TEXTURE);  
     this.gl.uniform1i(this.shaderProgram.samplerUniform, 0);
 
-    this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
+    // Clut texture
+    this.gl.activeTexture(this.gl.TEXTURE1);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.CLUT_TEXTURE);
+    this.gl.uniform1i(this.shaderProgram.clutSamplerUniform, 1);
+
     this.set_matrix_uniforms();
     this.set_window_uniforms();
+    this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
     this.gl.drawElements(this.gl.TRIANGLES, this.vertexIndexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
 
 }
@@ -303,6 +345,8 @@ GLPainter.prototype.set_and_compile_shader = function(fragshader, vertshader) {
     this.shaderProgram.pMatrixUniform = this.gl.getUniformLocation(this.shaderProgram, "uPMatrix");
     this.shaderProgram.mvMatrixUniform = this.gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
     this.shaderProgram.samplerUniform = this.gl.getUniformLocation(this.shaderProgram, "uSampler");
+    this.shaderProgram.clutSamplerUniform = this.gl.getUniformLocation(this.shaderProgram, "uClutSampler");
+
     this.shaderProgram.wlUniform = this.gl.getUniformLocation(this.shaderProgram, "uWL");
     this.shaderProgram.wwUniform = this.gl.getUniformLocation(this.shaderProgram, "uWW");
     this.shaderProgram.riUniform = this.gl.getUniformLocation(this.shaderProgram, "uRI");
