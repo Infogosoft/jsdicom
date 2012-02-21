@@ -54,6 +54,36 @@ DcmApp.prototype.load_files = function(files)
     });
 }
 
+DcmApp.prototype.load_urllist_from_url = function(url)
+{
+    var app = this;
+    this.curr_file_idx = 0;
+    this.files_loaded = 0;
+
+    $.ajax({
+        async: false,
+        dataType: "json",
+        url: urls,
+        success: function(r){
+            files = r;
+        }
+    });
+
+    for(var i=0;i<files.length;++i) {
+        this.load_url(files[i].href, i, files.length);
+    }
+
+    $("#slider").slider({
+        value: 0,
+        max: files.length-1,
+        slide: function(ui, event) {
+            app.curr_file_idx = event.value; //$(this).slider('value');
+            app.curr_tool.set_file(app.files[app.curr_file_idx]);
+            app.draw_image();
+        }
+    });
+}
+
 DcmApp.prototype.load_arraybuffer = function(abuf, index, file_count) {
     var app = this;
     var buffer = new Uint8Array(abuf);
