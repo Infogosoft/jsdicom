@@ -74,8 +74,11 @@ DicomParser.prototype.parse_file = function() {
     if(element_reader == undefined)
         throw "Unknown TransferSyntaxUID";
     // Parse Dicom-Data-Set
-    while(offset < this.buffer.length) {
+    while(offset + 6 < this.buffer.length) {
         var data_element = new DataElement(little_endian);
+        if(file.data_elements.length == 106)
+            var stst='ststs';
+
         offset = element_reader.read_element(this.buffer, offset, data_element);
         file.data_elements.push(data_element);
     }

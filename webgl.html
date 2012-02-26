@@ -26,22 +26,38 @@
 
     <script type="text/javascript">
     var pixel_data;
+    var file1, file2;
     $(document).ready(function() {
     
-        var filedata = base64_to_typedarray(file1);
-        var parser = new DicomParser(filedata);
-        var file = parser.parse_file();
-        file.pixel_data = file.get_element(0x7fe00010).data;
-        file.rows = file.get_element(0x00280010).get_value();
-        file.columns = file.get_element(0x00280011).get_value();
-        file.rescaleIntercept = file.get_element(dcmdict["RescaleIntercept"]).get_value();
-        file.rescaleSlope = file.get_element(dcmdict["RescaleSlope"]).get_value();
-        var pn = file.get_element(0x00100010).get_value();
+        var filedata1 = base64_to_typedarray(filefixture1);
+        var filedata2 = base64_to_typedarray(filefixture2);
+
+        var parser = new DicomParser(filedata1);
+        file1 = parser.parse_file();
+        file1.pixel_data = file1.get_element(0x7fe00010).data;
+        file1.rows = file1.get_element(0x00280010).get_value();
+        file1.columns = file1.get_element(0x00280011).get_value();
+        file1.rescaleIntercept = file1.get_element(dcmdict["RescaleIntercept"]).get_value();
+        file1.rescaleSlope = file1.get_element(dcmdict["RescaleSlope"]).get_value();
+
+
+        var parser = new DicomParser(filedata2);
+        file2 = parser.parse_file();
+        if (file2 != undefined) {
+            file2.pixel_data = file2.get_element(0x7fe00010).data;
+            file2.rows = file2.get_element(0x00280010).get_value();
+            file2.columns = file2.get_element(0x00280011).get_value();
+            file2.rescaleIntercept = file2.get_element(dcmdict["RescaleIntercept"]).get_value();
+            file2.rescaleSlope = file2.get_element(dcmdict["RescaleSlope"]).get_value();
+        }
 
         painter = new GLPainter();
         painter.init("c1");
-        painter.set_file(file);
-        painter.set_windowing(200.0, 40.0);
+        painter.fuse_files(file1, file2, 0.3);
+        //painter.fuse_files(file1, file2, 0.5);
+        //painter.set_file(file1);
+        painter.set_windowing(40, 200);
+        painter.set_cluts(plain_red, plain_green, plain_blue);
         painter.draw_image();
     });
     </script>

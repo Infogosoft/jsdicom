@@ -6,6 +6,7 @@ uniform highp float uWW;\
 uniform highp float uWL;\
 uniform highp float uRS;\
 uniform highp float uRI;\
+uniform highp float uAlpha;\
 uniform sampler2D uClutSampler;\
 \
 void main(void) {  \
@@ -17,7 +18,7 @@ void main(void) {  \
     highp float upper_bound = wl + ww/2.0;\
     intensity = (intensity - lower_bound)/(upper_bound - lower_bound);\
 \
-    gl_FragColor = vec4(intensity, intensity, intensity, 1.0);\
+    gl_FragColor = vec4(intensity, intensity, intensity, uAlpha);\
 }";
 
 var fragment_shader_16 = "\
@@ -29,6 +30,7 @@ uniform highp float uWW;\
 uniform highp float uWL;\
 uniform highp float uRS;\
 uniform highp float uRI;\
+uniform highp float uAlpha;\
 \
 void main(void) {  \
     highp vec4 texcolor = texture2D(uSampler, vTextureCoord); \
@@ -42,18 +44,19 @@ void main(void) {  \
     highp float upper_bound = wl + ww/2.0;\
     intensity = (intensity - lower_bound)/(upper_bound - lower_bound);\
     highp vec4 clutcolor = texture2D(uClutSampler, vec2(intensity, intensity)); \
-    gl_FragColor = vec4(clutcolor.r, clutcolor.g, clutcolor.b, 1.0);\
+    gl_FragColor = vec4(clutcolor.r, clutcolor.g, clutcolor.b, uAlpha);\
 \
 }";
 
 var fragment_shader_rgb_8 = "\
 varying highp vec2 vTextureCoord;\
 uniform sampler2D uSampler;\
+uniform highp float uAlpha;\
 \
 void main()\
 {\
     highp vec4 texcolor = texture2D(uSampler, vTextureCoord); \
-    gl_FragColor = vec4(texcolor.r, texcolor.g, texcolor.b, 1.0);\
+    gl_FragColor = vec4(texcolor.r, texcolor.g, texcolor.b, uAlpha);\
 }";
 
 

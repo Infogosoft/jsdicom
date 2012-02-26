@@ -2,6 +2,13 @@ var FRAG_SHADER_8 = 0;
 var FRAG_SHADER_16 = 1;
 var FRAG_SHADER_RGB_8 = 2;
 
+function ImageSlice(texture, rs, ri, alpha) {
+    this.texture = texture;
+    this.rs = rs;
+    this.ri = ri;
+    this.alpha = alpha;
+}
+
 function GLPainter() {
     this.gl;
     this.shaderProgram;
@@ -9,13 +16,11 @@ function GLPainter() {
     this.pMatrix = mat4.create();
     this.squareVertexPositionBuffer;
     this.vertexIndexBuffer;
-    this.THE_TEXTURE;
+    //this.THE_TEXTURE;
     this.CLUT_TEXTURE;
 
     this.ww = 200;
     this.wl = 40;
-    this.rs = 1;
-    this.ri = -1024;
     this.clut_r;
     this.clut_g;
     this.clut_b;
@@ -25,17 +30,41 @@ function GLPainter() {
     this.fovy = 90;
     this.scale = 1;
     this.pan = [0,0];
+
+    this.images = [];
+    this.shaderPrograms = {};
+
 }
 
 GLPainter.prototype.is_supported = function() {
     return window.WebGLRenderingContext;
 }
 
+GLPainter.prototype.fuse_files = function(file1, file2, alpha) {
+    this.images.length = 0;
+    this.images.push(new ImageSlice(this.file_to_texture(file2),
+                                    file2.rescaleSlope,
+                                    file2.rescaleIntercept,
+                                    1.0-alpha));
+    this.images.push(new ImageSlice(this.file_to_texture(file1),
+                                    file1.rescaleSlope,
+                                    file1.rescaleIntercept,
+                                    alpha));
+    this.rows = file1.rows;
+    this.columns = file1.columns;
+}
+
 GLPainter.prototype.set_file = function(dcmfile) {
-    this.rs=dcmfile.rescaleSlope;
-    this.ri=dcmfile.rescaleIntercept;
+    this.images = [new ImageSlice(this.file_to_texture(dcmfile), 
+                                  dcmfile.rescaleSlope, 
+                                  dcmfile.rescaleIntercept,
+                                  1.0)];
     this.rows = dcmfile.rows;
     this.columns = dcmfile.columns;
+    //this.THE_TEXTURE = this.file_to_texture(dcmfile);
+}
+
+GLPainter.prototype.file_to_texture = function(dcmfile) {
     var internalFormat;
     switch(jQuery.trim(dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
     case "MONOCHROME1":
@@ -44,38 +73,38 @@ GLPainter.prototype.set_file = function(dcmfile) {
         if(dcmfile.get_element(dcmdict["BitsStored"]).get_value() <= 8) {
             internalFormat = this.gl.LUMINANCE;
             // Change shader?
-            if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_8) {
+            /*if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_8) {
                 this.detach_shaders();
                 this.shaderProgram.activeFragmentShader = FRAG_SHADER_8;
                 this.set_and_compile_shader(this.shaderProgram.fragmentShader8bit, 
                                             this.shaderProgram.vertexShader);
-            }
+            }*/
         } else {
             internalFormat = this.gl.LUMINANCE_ALPHA;
-            if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_16) {
+            /*if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_16) {
                 this.detach_shaders();
                 this.shaderProgram.activeFragmentShader = FRAG_SHADER_16;
                 this.set_and_compile_shader(this.shaderProgram.fragmentShader16bit, 
                                             this.shaderProgram.vertexShader);
-            }
+            }*/
         }
         break;
     case "RGB":
         internalFormat = this.gl.RGB;
-        if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_RGB_8) {
+        /*if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_RGB_8) {
             this.detach_shaders();
             this.shaderProgram.activeFragmentShader = FRAG_SHADER_RGB_8;
             this.set_and_compile_shader(this.shaderProgram.fragmentShaderRGB8bit, 
                                         this.shaderProgram.vertexShader);
-        }
+        }*/
         break;
     default:
         alert("Unknown Photometric Interpretation" + dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value() + "!");
         return;
     }
 
-    this.THE_TEXTURE = this.gl.createTexture(); 
-    this.gl.bindTexture(this.gl.TEXTURE_2D, this.THE_TEXTURE);  
+    var texture = this.gl.createTexture(); 
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);  
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
     this.gl.texImage2D(this.gl.TEXTURE_2D,       // target
                        0,                        // level
@@ -92,6 +121,7 @@ GLPainter.prototype.set_file = function(dcmfile) {
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
                   
     this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+    return texture;
 }
 
 
@@ -130,7 +160,6 @@ GLPainter.prototype.set_cluts = function(clut_r, clut_g, clut_b) {
     if(!this.gl)
         return;
 
-    console.log('settings cluts');
     // Re-pack as rgb
     var rgb_clut = new Uint8Array(256*3);
     for(var i=0;i<256;++i) {
@@ -166,22 +195,6 @@ GLPainter.prototype.set_windowing = function(wl, ww) {
 }
 GLPainter.prototype.get_windowing = function() {
     return [this.wl, this.ww];
-}
-
-GLPainter.prototype.detach_shaders = function() {
-    switch(this.shaderProgram.activeFragmentShader) {
-    case FRAG_SHADER_16:
-        this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShader16bit);
-        break;
-    case FRAG_SHADER_8:
-        this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShader8bit);
-        break;
-    case FRAG_SHADER_RGB_8:
-        this.gl.detachShader(this.shaderProgram, this.shaderProgram.fragmentShaderRGB8bit);
-        break;
-    }
-    this.gl.detachShader(this.shaderProgram, this.shaderProgram.vertexShader);
-    this.shaderProgram.activeFragmentShader = null;
 }
 
 GLPainter.prototype.unproject = function(canvas_pos) {
@@ -242,34 +255,44 @@ GLPainter.prototype.update_projection_matrix = function() {
 GLPainter.prototype.draw_image = function() {
     this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    //this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    this.gl.enable(this.gl.BLEND);
+    this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE);
 
     this.update_projection_matrix();
+    for(var imgidx in this.images) {
+        var image = this.images[imgidx];
 
+        // TODO: Choose depending on files photometric interpretation
+        var shaderProgram = this.shaderPrograms[FRAG_SHADER_16];
+        this.gl.useProgram(shaderProgram);
 
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
-    this.gl.vertexAttribPointer(this.shaderProgram.vertexPositionAttribute, 
-                           this.squareVertexPositionBuffer.itemSize, 
-                           this.gl.FLOAT, 
-                           false, 
-                           0, 
-                           0);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
+        this.gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, 
+                               this.squareVertexPositionBuffer.itemSize, 
+                               this.gl.FLOAT, 
+                               false, 
+                               0, 
+                               0);
 
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
-    this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute, this.textureCoordBuffer.itemSize, this.gl.FLOAT, false, 0, 0);
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
+        this.gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, this.textureCoordBuffer.itemSize, this.gl.FLOAT, false, 0, 0);
 
-    this.gl.activeTexture(this.gl.TEXTURE0);  
-    this.gl.bindTexture(this.gl.TEXTURE_2D, this.THE_TEXTURE);  
-    this.gl.uniform1i(this.shaderProgram.samplerUniform, 0);
+        this.gl.activeTexture(this.gl.TEXTURE0);  
+        this.gl.bindTexture(this.gl.TEXTURE_2D, image.texture);  
+        this.gl.uniform1i(shaderProgram.samplerUniform, 0);
 
-    // Clut texture
-    this.gl.activeTexture(this.gl.TEXTURE1);
-    this.gl.bindTexture(this.gl.TEXTURE_2D, this.CLUT_TEXTURE);
-    this.gl.uniform1i(this.shaderProgram.clutSamplerUniform, 1);
+        // Clut texture
+        this.gl.activeTexture(this.gl.TEXTURE1);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.CLUT_TEXTURE);
+        this.gl.uniform1i(shaderProgram.clutSamplerUniform, 1);
 
-    this.set_matrix_uniforms();
-    this.set_window_uniforms();
-    this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
-    this.gl.drawElements(this.gl.TRIANGLES, this.vertexIndexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
+        this.set_matrix_uniforms();
+        this.set_window_uniforms(image);
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
+        this.gl.drawElements(this.gl.TRIANGLES, this.vertexIndexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
+    }
+
 
 }
 
@@ -289,7 +312,7 @@ GLPainter.prototype.init = function(canvasid) {
     this.init_shaders();
     this.init_buffers();
     this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    this.gl.enable(this.gl.DEPTH_TEST);
+    //this.gl.enable(this.gl.DEPTH_TEST);
 
     if (!this.gl) {
         alert("Could not initialise WebGL, sorry :-(");
@@ -325,52 +348,52 @@ GLPainter.prototype.init_shaders = function() {
     var fragmentShaderRGB8 = this.compile_shader(fragment_shader_rgb_8, this.gl.FRAGMENT_SHADER);
     var vertexShader = this.compile_shader(vertex_shader, this.gl.VERTEX_SHADER);
 
-    this.shaderProgram = this.gl.createProgram();
-    this.shaderProgram.fragmentShader8bit = fragmentShader8;
-    this.shaderProgram.fragmentShader16bit = fragmentShader16;
-    this.shaderProgram.fragmentShaderRGB8bit = fragmentShaderRGB8;
-    this.shaderProgram.vertexShader = vertexShader;
-    this.shaderProgram.activeFragmentShader = FRAG_SHADER_RGB_8;
-    this.set_and_compile_shader(fragmentShaderRGB8, vertexShader);
+    this.shaderPrograms[FRAG_SHADER_8] = this.create_shader_program(fragmentShader8, vertexShader);
+    this.shaderPrograms[FRAG_SHADER_16] = this.create_shader_program(fragmentShader16, vertexShader);
+    this.shaderPrograms[FRAG_SHADER_RGB_8] = this.create_shader_program(fragmentShaderRGB8, vertexShader);
 }
 
-GLPainter.prototype.set_and_compile_shader = function(fragshader, vertshader) {
-    this.gl.attachShader(this.shaderProgram, vertshader);
-    this.gl.attachShader(this.shaderProgram, fragshader);
-    this.gl.linkProgram(this.shaderProgram);
+GLPainter.prototype.create_shader_program = function(fragshader, vertshader) {
+    var shaderProgram = this.gl.createProgram();
+    this.gl.attachShader(shaderProgram, vertshader);
+    this.gl.attachShader(shaderProgram, fragshader);
+    this.gl.linkProgram(shaderProgram);
 
-    if (!this.gl.getProgramParameter(this.shaderProgram, this.gl.LINK_STATUS)) {
+    if (!this.gl.getProgramParameter(shaderProgram, this.gl.LINK_STATUS)) {
         alert("Could not initialise shaders");
     }
 
-    this.gl.useProgram(this.shaderProgram);
+    shaderProgram.vertexPositionAttribute = this.gl.getAttribLocation(shaderProgram, "aVertexPosition");
+    this.gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+    shaderProgram.textureCoordAttribute = this.gl.getAttribLocation(shaderProgram, "aTextureCoord");  
+    this.gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute); 
 
-    this.shaderProgram.vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
-    this.gl.enableVertexAttribArray(this.shaderProgram.vertexPositionAttribute);
-    this.shaderProgram.textureCoordAttribute = this.gl.getAttribLocation(this.shaderProgram, "aTextureCoord");  
-    this.gl.enableVertexAttribArray(this.shaderProgram.textureCoordAttribute); 
+    shaderProgram.pMatrixUniform = this.gl.getUniformLocation(shaderProgram, "uPMatrix");
+    shaderProgram.mvMatrixUniform = this.gl.getUniformLocation(shaderProgram, "uMVMatrix");
+    shaderProgram.samplerUniform = this.gl.getUniformLocation(shaderProgram, "uSampler");
+    shaderProgram.clutSamplerUniform = this.gl.getUniformLocation(shaderProgram, "uClutSampler");
 
-    this.shaderProgram.pMatrixUniform = this.gl.getUniformLocation(this.shaderProgram, "uPMatrix");
-    this.shaderProgram.mvMatrixUniform = this.gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
-    this.shaderProgram.samplerUniform = this.gl.getUniformLocation(this.shaderProgram, "uSampler");
-    this.shaderProgram.clutSamplerUniform = this.gl.getUniformLocation(this.shaderProgram, "uClutSampler");
-
-    this.shaderProgram.wlUniform = this.gl.getUniformLocation(this.shaderProgram, "uWL");
-    this.shaderProgram.wwUniform = this.gl.getUniformLocation(this.shaderProgram, "uWW");
-    this.shaderProgram.riUniform = this.gl.getUniformLocation(this.shaderProgram, "uRI");
-    this.shaderProgram.rsUniform = this.gl.getUniformLocation(this.shaderProgram, "uRS");
+    shaderProgram.wlUniform = this.gl.getUniformLocation(shaderProgram, "uWL");
+    shaderProgram.wwUniform = this.gl.getUniformLocation(shaderProgram, "uWW");
+    shaderProgram.riUniform = this.gl.getUniformLocation(shaderProgram, "uRI");
+    shaderProgram.rsUniform = this.gl.getUniformLocation(shaderProgram, "uRS");
+    shaderProgram.alphaUniform = this.gl.getUniformLocation(shaderProgram, "uAlpha");
+    return shaderProgram;
 }
 
 GLPainter.prototype.set_matrix_uniforms = function() {
-    this.gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
-    this.gl.uniformMatrix4fv(this.shaderProgram.mvMatrixUniform, false, this.mvMatrix);
+    var shaderProgram = this.shaderPrograms[FRAG_SHADER_16];
+    this.gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, this.pMatrix);
+    this.gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, this.mvMatrix);
 }
 
-GLPainter.prototype.set_window_uniforms = function() {
-    this.gl.uniform1f(this.shaderProgram.wlUniform, this.wl);
-    this.gl.uniform1f(this.shaderProgram.wwUniform, this.ww);
-    this.gl.uniform1f(this.shaderProgram.rsUniform, this.rs);
-    this.gl.uniform1f(this.shaderProgram.riUniform, this.ri);
+GLPainter.prototype.set_window_uniforms = function(image) {
+    var shaderProgram = this.shaderPrograms[FRAG_SHADER_16];
+    this.gl.uniform1f(shaderProgram.wlUniform, this.wl);
+    this.gl.uniform1f(shaderProgram.wwUniform, this.ww);
+    this.gl.uniform1f(shaderProgram.rsUniform, image.rs);
+    this.gl.uniform1f(shaderProgram.riUniform, image.ri);
+    this.gl.uniform1f(shaderProgram.alphaUniform, image.alpha);
 }
 
 GLPainter.prototype.init_buffers = function() {
