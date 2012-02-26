@@ -2,7 +2,8 @@ var FRAG_SHADER_8 = 0;
 var FRAG_SHADER_16 = 1;
 var FRAG_SHADER_RGB_8 = 2;
 
-function ImageSlice(texture, rs, ri, alpha) {
+function ImageSlice(file, texture, rs, ri, alpha) {
+    this.file = file;
     this.texture = texture;
     this.rs = rs;
     this.ri = ri;
@@ -42,11 +43,13 @@ GLPainter.prototype.is_supported = function() {
 
 GLPainter.prototype.fuse_files = function(file1, file2, alpha) {
     this.images.length = 0;
-    this.images.push(new ImageSlice(this.file_to_texture(file2),
+    this.images.push(new ImageSlice(file1,
+                                    this.file_to_texture(file2),
                                     file2.rescaleSlope,
                                     file2.rescaleIntercept,
-                                    1.0-alpha));
-    this.images.push(new ImageSlice(this.file_to_texture(file1),
+                                    1.0));
+    this.images.push(new ImageSlice(file2,
+                                    this.file_to_texture(file1),
                                     file1.rescaleSlope,
                                     file1.rescaleIntercept,
                                     alpha));
@@ -55,7 +58,8 @@ GLPainter.prototype.fuse_files = function(file1, file2, alpha) {
 }
 
 GLPainter.prototype.set_file = function(dcmfile) {
-    this.images = [new ImageSlice(this.file_to_texture(dcmfile), 
+    this.images = [new ImageSlice(dcmfile,
+                                  this.file_to_texture(dcmfile), 
                                   dcmfile.rescaleSlope, 
                                   dcmfile.rescaleIntercept,
                                   1.0)];
@@ -263,8 +267,24 @@ GLPainter.prototype.draw_image = function() {
     for(var imgidx in this.images) {
         var image = this.images[imgidx];
 
-        // TODO: Choose depending on files photometric interpretation
-        var shaderProgram = this.shaderPrograms[FRAG_SHADER_16];
+        var shaderProgram;
+        switch(jQuery.trim(image.file.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
+            case "MONOCHROME1":
+                // TODO: MONOCHROME1 should use inverse cluts.
+            case "MONOCHROME2":
+                if(image.file.get_element(dcmdict["BitsStored"]).get_value() <= 8) {
+                    shaderProgram = this.shaderPrograms[FRAG_SHADER_8];
+                } else {
+                    shaderProgram = this.shaderPrograms[FRAG_SHADER_16];
+                }
+                break;
+            case "RGB":
+                shaderProgram = this.shaderPrograms[FRAG_SHADER_RGB_8];
+                break;
+            default:
+                alert("Unknown Photometric Interpretation" + image.file.get_element(dcmdict["PhotometricInterpretation"]).get_value() + "!");
+                return;
+        }
         this.gl.useProgram(shaderProgram);
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
@@ -287,8 +307,8 @@ GLPainter.prototype.draw_image = function() {
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.CLUT_TEXTURE);
         this.gl.uniform1i(shaderProgram.clutSamplerUniform, 1);
 
-        this.set_matrix_uniforms();
-        this.set_window_uniforms(image);
+        this.set_matrix_uniforms(shaderProgram);
+        this.set_window_uniforms(shaderProgram, image);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
         this.gl.drawElements(this.gl.TRIANGLES, this.vertexIndexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
     }
@@ -381,14 +401,12 @@ GLPainter.prototype.create_shader_program = function(fragshader, vertshader) {
     return shaderProgram;
 }
 
-GLPainter.prototype.set_matrix_uniforms = function() {
-    var shaderProgram = this.shaderPrograms[FRAG_SHADER_16];
+GLPainter.prototype.set_matrix_uniforms = function(shaderProgram) {
     this.gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, this.pMatrix);
     this.gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, this.mvMatrix);
 }
 
-GLPainter.prototype.set_window_uniforms = function(image) {
-    var shaderProgram = this.shaderPrograms[FRAG_SHADER_16];
+GLPainter.prototype.set_window_uniforms = function(shaderProgram, image) {
     this.gl.uniform1f(shaderProgram.wlUniform, this.wl);
     this.gl.uniform1f(shaderProgram.wwUniform, this.ww);
     this.gl.uniform1f(shaderProgram.rsUniform, image.rs);
