@@ -63,7 +63,7 @@ DcmApp.prototype.load_urllist_from_url = function(url)
     $.ajax({
         async: false,
         dataType: "json",
-        url: urls,
+        url: url,
         success: function(r){
             files = r;
         }
