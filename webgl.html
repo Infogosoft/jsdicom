@@ -34,22 +34,9 @@
 
         var parser = new DicomParser(filedata1);
         file1 = parser.parse_file();
-        file1.pixel_data = file1.get_element(0x7fe00010).data;
-        file1.rows = file1.get_element(0x00280010).get_value();
-        file1.columns = file1.get_element(0x00280011).get_value();
-        file1.rescaleIntercept = file1.get_element(dcmdict["RescaleIntercept"]).get_value();
-        file1.rescaleSlope = file1.get_element(dcmdict["RescaleSlope"]).get_value();
-
 
         var parser = new DicomParser(filedata2);
         file2 = parser.parse_file();
-        if (file2 != undefined) {
-            file2.pixel_data = file2.get_element(0x7fe00010).data;
-            file2.rows = file2.get_element(0x00280010).get_value();
-            file2.columns = file2.get_element(0x00280011).get_value();
-            file2.rescaleIntercept = file2.get_element(dcmdict["RescaleIntercept"]).get_value();
-            file2.rescaleSlope = file2.get_element(dcmdict["RescaleSlope"]).get_value();
-        }
 
         painter = new GLPainter();
         painter.init("c1");

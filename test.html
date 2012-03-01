@@ -19,7 +19,7 @@
         var filedata = base64_to_typedarray(file1);
         var parser = new DicomParser(filedata);
         var file = parser.parse_file();
-        var pn = file.get_element(0x00100010).get_value();
+        var pn = file.PatientsName;
         equal("Liver Dose examples ", pn, "Failed parsing patients name");
     });
 

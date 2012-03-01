@@ -249,11 +249,11 @@ GLPainter.prototype.draw_image = function() {
         var image = this.images[imgidx];
 
         var shaderProgram;
-        switch(jQuery.trim(image.file.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
+        switch(jQuery.trim(image.file.PhotometricInterpretation)) {
             case "MONOCHROME1":
                 // TODO: MONOCHROME1 should use inverse cluts.
             case "MONOCHROME2":
-                if(image.file.get_element(dcmdict["BitsStored"]).get_value() <= 8) {
+                if(image.file.BitsStored <= 8) {
                     shaderProgram = this.shaderPrograms[FRAG_SHADER_8];
                 } else {
                     shaderProgram = this.shaderPrograms[FRAG_SHADER_16];
@@ -263,7 +263,7 @@ GLPainter.prototype.draw_image = function() {
                 shaderProgram = this.shaderPrograms[FRAG_SHADER_RGB_8];
                 break;
             default:
-                alert("Unknown Photometric Interpretation" + image.file.get_element(dcmdict["PhotometricInterpretation"]).get_value() + "!");
+                alert("Unknown Photometric Interpretation" + image.file.PhotometricInterpretation + "!");
                 return;
         }
         this.gl.useProgram(shaderProgram);

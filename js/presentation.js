@@ -72,15 +72,16 @@ function draw_thumbnail_to_canvas(file, ctx, size) {
         ww = (ww.constructor == Array) ? ww[0] : ww;
     }
     var step = file.columns / size;
-    
-    for(var row=0;row<file.rows;row+=step) {
-        for(var col=0;col<file.columns;col+=step) {
+
+    for(var row=0;row<file.Rows;row+=step) {
+        for(var col=0;col<file.Columns;col+=step) {
             var data_idx = (col + row*file.columns)*2;
-            var intensity = file.pixel_data[data_idx+1]*256.0 + file.pixel_data[data_idx];
-            intensity = intensity * file.rescaleSlope + file.rescaleIntercept;
+            var intensity = file.PixelData[data_idx+1]*256.0 + file.PixelData[data_idx];
+            intensity = intensity * file.RescaleSlope + file.RescaleIntercept;
             var lower_bound = wl - ww/2.0;
             var upper_bound = wl + ww/2.0;
             var intensity = (intensity - lower_bound)/(upper_bound - lower_bound);
+
             if(intensity < 0.0)
                 intensity = 0.0;
             if(intensity > 1.0)

@@ -34,8 +34,8 @@ DicomModel.modalities = {
 }
 
 DicomModel.parseFile = function(file) {
-    var sopInstanceUID = file.get_element(dcmdict.SOPInstanceUID).get_value();
-    var modality = file.get_element(dcmdict.Modality).get_value();
+    var sopInstanceUID = file.SOPInstanceUID;
+    var modality = file.Modality;
     var obj = DicomModel.modalities[modality](file);
     DicomModel.sopInstanceUIDs[sopInstanceUID] = obj;
     return obj;
@@ -54,7 +54,7 @@ DicomModel.Study = function(files) {
         return;
     }
 
-    this.studyInstanceUID = this.files[0].get_element(dcmdict.FrameOfReferenceUID).get_value();
+    this.studyInstanceUID = this.files[0].FrameOfReferenceUID;
 }
 
 DicomModel._verifySame = function(files, tag) {
@@ -73,7 +73,7 @@ DicomModel.Series = function(files) {
         return;
     }
 
-    this.frameOfReference = this.files[0].get_element(dcmdict.FrameOfReferenceUID).get_value();
+    this.frameOfReference = this.files[0].FrameOfReferenceUID;
 
     this.addImages = function(images) {
         

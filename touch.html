@@ -33,12 +33,12 @@
         var filedata = base64_to_typedarray(file1);
         var parser = new DicomParser(filedata);
         var file = parser.parse_file();
-        file.pixel_data = file.get_element(0x7fe00010).get_value();
-        file.rows = file.get_element(0x00280010).get_value();
-        file.columns = file.get_element(0x00280011).get_value();
-        file.rescaleIntercept = file.get_element(dcmdict["RescaleIntercept"]).get_value();
-        file.rescaleSlope = file.get_element(dcmdict["RescaleSlope"]).get_value();
-        var pn = file.get_element(0x00100010).get_value();
+        file.pixel_data = file.PixelData;
+        file.rows = file.Rows;
+        file.columns = file.Columns;
+        file.rescaleIntercept = file.RescaleIntercept;
+        file.rescaleSlope = file.RescaleSlope;
+        var pn = file.PatientsName;
 
         painter = new CanvasPainter();
         painter.init("c1");
