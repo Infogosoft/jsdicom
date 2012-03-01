@@ -80,8 +80,6 @@ function element_reader(tag_reader, number_reader, implicit) {
         //element = {};
         element.tag = tag;
         element.vr = vr;
-        if(vr.charCodeAt(0) < 65 || vr.charCodeAt(0) > 90)
-            var cudr='alfa';
         if (vl == 0xffffffff)
             element.vl = 0;
         else

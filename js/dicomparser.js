@@ -64,7 +64,7 @@ DicomParser.prototype.parse_file = function() {
     while(offset < meta_element_end) {
         var meta_element = new DataElement(true);
         offset = meta_element_reader.read_element(this.buffer, offset, meta_element);
-        file.meta_elements.push(meta_element);
+        file.meta_elements[meta_element.tag] = meta_element;
     }
 
     var transfer_syntax = file.get_meta_element(0x00020010).get_value();
@@ -73,14 +73,15 @@ DicomParser.prototype.parse_file = function() {
     var element_reader = get_element_reader(transfer_syntax);
     if(element_reader == undefined)
         throw "Unknown TransferSyntaxUID";
+
     // Parse Dicom-Data-Set
     while(offset + 6 < this.buffer.length) {
         var data_element = new DataElement(little_endian);
-        if(file.data_elements.length == 106)
-            var stst='ststs';
 
         offset = element_reader.read_element(this.buffer, offset, data_element);
-        file.data_elements.push(data_element);
+        file.data_elements[data_element.tag] = data_element;
+        if(data_element.tag in dcmdict)
+            file[dcmdict[data_element.tag][1]] = data_element.get_value();
     }
     return file;
 }

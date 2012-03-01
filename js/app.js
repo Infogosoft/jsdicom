@@ -93,41 +93,26 @@ DcmApp.prototype.load_arraybuffer = function(abuf, index, file_count) {
         app.files[index] = undefined;
         return;
     }
-    file.modality = file.get_element(dcmdict["Modality"]).get_value();
-    
-    var pn = file.get_element(dcmdict["PatientsName"]).get_value();
-    if (file.modality == "CT" || file.modality == "PT" || file.modality == "MR") {
-        file.pixel_data = file.get_element(dcmdict["PixelData"]).get_value();
-        file.rows = file.get_element(dcmdict["Rows"]).get_value();
-        file.columns = file.get_element(dcmdict["Columns"]).get_value();
-        file.imagePosition = file.get_element(dcmdict["ImagePositionPatient"]).get_value();
-        imageOrientation = file.get_element(dcmdict["ImageOrientationPatient"]).get_value();
+
+    if (file.Modality == "CT" || file.Modality == "PT" || file.Modality == "MR") {
+        imageOrientation = file.ImageOrientationPatient;
         file.imageOrientationRow = imageOrientation.slice(0,3);
         file.imageOrientationColumn = imageOrientation.slice(3,6);
         
-        file.rescaleIntercept = file.get_element(dcmdict["RescaleIntercept"]).get_value();
-        file.rescaleSlope = file.get_element(dcmdict["RescaleSlope"]).get_value();
-        //app.files[index] = file;
         app.organize_file(file);
         if(index == 0) {
-            app.curr_series_uid = file.get_element(dcmdict["SeriesInstanceUID"]).get_value();
+            app.curr_series_uid = file.SeriesInstanceUID;
             app.files = app.series[app.curr_series_uid].files;
             app.draw_image();
         }
     } else if(file.modality == "US") {
-        file.rows = file.get_element(dcmdict["Rows"]).get_value();
-        file.columns = file.get_element(dcmdict["Columns"]).get_value();
-        file.bits_stored = file.get_element(dcmdict["Columns"]).get_value();
-        //file.get_element(dcmdict["PixelData"]).vr = "OB"; 
-        file.pixel_data = file.get_element(dcmdict["PixelData"]).get_value();
-        file.photometric_representation = file.get_element(dcmdict["PhotometricInterpretation"]).get_value();
-        file.rescaleIntercept = 0;
-        file.rescaleSlope = 1;
+        file.RescaleIntercept = 0;
+        file.RescaleSlope = 1;
         app.files[index] = file;
 
         app.organize_file(file);
         if(index == 0) {
-            app.curr_series_uid = file.get_element(dcmdict["SeriesInstanceUID"]).get_value();
+            app.curr_series_uid = file.SeriesInstanceUID;
             app.files = app.series[app.curr_series_uid].files;
             app.draw_image();
         }
@@ -169,8 +154,8 @@ DcmApp.prototype.load_url = function(url, index, file_count) {
 }
 
 DcmApp.prototype.organize_file = function(file) {
-    var series_uid = file.get_element(dcmdict["SeriesInstanceUID"]).get_value();
-    var series_desc = file.get_element(dcmdict["SeriesDescription"]).get_value();
+    var series_uid = file.SeriesInstanceUID;
+    var series_desc = file.SeriesDescription;
     if(!this.series.hasOwnProperty(series_uid)) {
         var series = new DcmSeries();
         series.seriesUID = series_uid;
@@ -190,9 +175,9 @@ DcmApp.prototype.set_series = function(series_uid) {
     this.files = this.series[series_uid].files;
     var ww;
     var wl;
-    if(this.files[0].get_element(dcmdict["WindowCenter"]) !== 0) {
-        wl = this.files[0].get_element(dcmdict["WindowCenter"]).get_value();
-        ww = this.files[0].get_element(dcmdict["WindowWidth"]).get_value(); 
+    if(this.files[0].WindowCenter !== 0) {
+        wl = this.files[0].WindowCenter;
+        ww = this.files[0].WindowWidth;
         if(wl.constructor == Array) {
             app.update_window_preset_list(wl, ww);
             wl = wl[0];
@@ -200,11 +185,11 @@ DcmApp.prototype.set_series = function(series_uid) {
         if(ww.constructor == Array) {
             ww = ww[0];
         }
-    } else if(this.files[0].get_element(dcmdict["RescaleSlope"]) !== 0) {
+    } else if(this.files[0].RescaleSlope !== 0) {
         // TODO check the actual datatype instead of using 65536...
-        maxval = this.files[0].get_element(dcmdict["RescaleSlope"]).get_value() * 65536 +
-            this.files[0].get_element(dcmdict["RescaleIntercept"]).get_value();
-        minval = this.files[0].get_element(dcmdict["RescaleIntercept"]).get_value();
+        maxval = this.files[0].RescaleSlope * 65536 +
+            this.files[0].RescaleIntercept;
+        minval = this.files[0].RescaleIntercept;
         ww = maxval-minval;
         wl = (maxval+minval)/2;
     } else {

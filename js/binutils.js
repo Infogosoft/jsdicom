@@ -153,3 +153,10 @@ function element_repr(elem) {
     }
     return tag + " VR: " + elem.vr;
 }
+
+/*function zero_out_pixel_padding(file, padding_value) {
+    // Zero out all pixels with value PixelPaddingValue
+    for(var i=0;i<file.pixel_data.length) {
+        file.pixel_data
+    }
+}*/

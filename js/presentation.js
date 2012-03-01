@@ -40,8 +40,8 @@ function fill_series_selection(series, selected_uid, painter_factory) {
 
 function fill_metadata_table(file) {
     $("#metadata-table tbody").empty();
-    for(var i=0;i<file.data_elements.length;++i) {
-        var element = file.data_elements[i];
+    for(var key in file.data_elements) {
+        var element = file.data_elements[key];
         var tag = $("<td>").html(tag_repr(element.tag));
         var dictmatch = dcmdict[element.tag];
         var name = $("<td>").html("unknown");
@@ -54,8 +54,8 @@ function fill_metadata_table(file) {
         }
 
         var tr = $("<tr>").append(tag).append(name).append(value);
-        if(i%2 == 0)
-            tr.addClass("even");
+        /*if(i%2 == 0)
+            tr.addClass("even");*/
         $("#metadata-table tbody").append(tr);
     }
 }

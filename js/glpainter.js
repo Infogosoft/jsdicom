@@ -45,65 +45,46 @@ GLPainter.prototype.fuse_files = function(file1, file2, alpha) {
     this.images.length = 0;
     this.images.push(new ImageSlice(file1,
                                     this.file_to_texture(file2),
-                                    file2.rescaleSlope,
-                                    file2.rescaleIntercept,
+                                    file2.RescaleSlope,
+                                    file2.RescaleIntercept,
                                     1.0));
     this.images.push(new ImageSlice(file2,
                                     this.file_to_texture(file1),
-                                    file1.rescaleSlope,
-                                    file1.rescaleIntercept,
+                                    file1.RescaleSlope,
+                                    file1.RescaleIntercept,
                                     alpha));
-    this.rows = file1.rows;
-    this.columns = file1.columns;
+    this.rows = file1.Rows;
+    this.columns = file1.Columns;
 }
 
 GLPainter.prototype.set_file = function(dcmfile) {
     this.images = [new ImageSlice(dcmfile,
                                   this.file_to_texture(dcmfile), 
-                                  dcmfile.rescaleSlope, 
-                                  dcmfile.rescaleIntercept,
+                                  dcmfile.RescaleSlope, 
+                                  dcmfile.RescaleIntercept,
                                   1.0)];
-    this.rows = dcmfile.rows;
-    this.columns = dcmfile.columns;
+    this.rows = dcmfile.Rows;
+    this.columns = dcmfile.Columns;
     //this.THE_TEXTURE = this.file_to_texture(dcmfile);
 }
 
 GLPainter.prototype.file_to_texture = function(dcmfile) {
     var internalFormat;
-    switch(jQuery.trim(dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value())) {
+    switch(jQuery.trim(dcmfile.PhotometricInterpretation)) {
     case "MONOCHROME1":
         // TODO: MONOCHROME1 should use inverse cluts.
     case "MONOCHROME2":
-        if(dcmfile.get_element(dcmdict["BitsStored"]).get_value() <= 8) {
+        if(dcmfile.BitsStored <= 8) {
             internalFormat = this.gl.LUMINANCE;
-            // Change shader?
-            /*if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_8) {
-                this.detach_shaders();
-                this.shaderProgram.activeFragmentShader = FRAG_SHADER_8;
-                this.set_and_compile_shader(this.shaderProgram.fragmentShader8bit, 
-                                            this.shaderProgram.vertexShader);
-            }*/
         } else {
             internalFormat = this.gl.LUMINANCE_ALPHA;
-            /*if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_16) {
-                this.detach_shaders();
-                this.shaderProgram.activeFragmentShader = FRAG_SHADER_16;
-                this.set_and_compile_shader(this.shaderProgram.fragmentShader16bit, 
-                                            this.shaderProgram.vertexShader);
-            }*/
         }
         break;
     case "RGB":
         internalFormat = this.gl.RGB;
-        /*if(this.shaderProgram.activeFragmentShader != FRAG_SHADER_RGB_8) {
-            this.detach_shaders();
-            this.shaderProgram.activeFragmentShader = FRAG_SHADER_RGB_8;
-            this.set_and_compile_shader(this.shaderProgram.fragmentShaderRGB8bit, 
-                                        this.shaderProgram.vertexShader);
-        }*/
         break;
     default:
-        alert("Unknown Photometric Interpretation" + dcmfile.get_element(dcmdict["PhotometricInterpretation"]).get_value() + "!");
+        alert("Unknown Photometric Interpretation" + dcmfile.PhotometricInterpretation + "!");
         return;
     }
 
@@ -113,12 +94,12 @@ GLPainter.prototype.file_to_texture = function(dcmfile) {
     this.gl.texImage2D(this.gl.TEXTURE_2D,       // target
                        0,                        // level
                        internalFormat,           // internalformat
-                       dcmfile.columns,          // width
-                       dcmfile.rows,             // height 
+                       dcmfile.Columns,          // width
+                       dcmfile.Rows,             // height 
                        0,                        // border
                        internalFormat,           // format
                        this.gl.UNSIGNED_BYTE,    // type
-                       Uint8Array(dcmfile.pixel_data.buffer, dcmfile.pixel_data.byteOffset)); // data
+                       Uint8Array(dcmfile.PixelData.buffer, dcmfile.PixelData.byteOffset)); // data
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
