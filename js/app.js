@@ -175,7 +175,7 @@ DcmApp.prototype.set_series = function(series_uid) {
     this.files = this.series[series_uid].files;
     var ww;
     var wl;
-    if(this.files[0].WindowCenter !== 0) {
+    if(this.files[0].WindowCenter !== undefined) {
         wl = this.files[0].WindowCenter;
         ww = this.files[0].WindowWidth;
         if(wl.constructor == Array) {

@@ -27,18 +27,11 @@
     <script type="text/javascript" src="tests/file_fixtures.js"></script>
 
     <script type="text/javascript">
-    var pixel_data;
     $(document).ready(function() {
     
         var filedata = base64_to_typedarray(file1);
         var parser = new DicomParser(filedata);
         var file = parser.parse_file();
-        file.pixel_data = file.PixelData;
-        file.rows = file.Rows;
-        file.columns = file.Columns;
-        file.rescaleIntercept = file.RescaleIntercept;
-        file.rescaleSlope = file.RescaleSlope;
-        var pn = file.PatientsName;
 
         painter = new CanvasPainter();
         painter.init("c1");
