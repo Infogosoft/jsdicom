@@ -56,7 +56,7 @@ uniform highp float uAlpha;\
 void main()\
 {\
     highp vec4 texcolor = texture2D(uSampler, vTextureCoord); \
-    gl_FragColor = vec4(texcolor.r, texcolor.g, texcolor.b, uAlpha);\
+    gl_FragColor = vec4(texcolor.r, texcolor.g, texcolor.b, 1.0);\
 }";
 
 

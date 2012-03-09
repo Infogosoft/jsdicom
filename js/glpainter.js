@@ -10,7 +10,8 @@ function ImageSlice(file, texture, rs, ri, alpha) {
     this.alpha = alpha;
 }
 
-function GLPainter() {
+function GLPainter(canvasid) {
+    this.canvas = document.getElementById(canvasid);
     this.gl;
     this.shaderProgram;
     this.mvMatrix = mat4.create();
@@ -34,7 +35,7 @@ function GLPainter() {
 
     this.images = [];
     this.shaderPrograms = {};
-
+    this.clut_bar_enabled = false;
 }
 
 GLPainter.prototype.is_supported = function() {
@@ -237,14 +238,58 @@ GLPainter.prototype.update_projection_matrix = function() {
     }
 }
 
+GLPainter.prototype.draw_clut_bar = function() {
+    if(!this.clut_bar_enabled)
+        return;
+    // Draw clut bar
+    this.gl.viewport(10, 10, 50, this.canvas.height-100);
+    var pMatrix = mat4.create();
+    mat4.perspective(this.fovy, this.gl.viewportWidth / this.gl.viewportHeight, 0.1, 100.0, pMatrix);
+    var mvMatrix = mat4.create();
+    mat4.identity(mvMatrix);
+    mat4.translate(mvMatrix, [0,0,-1]);
+    mat4.scale(mvMatrix, [20,1,1]);
+    mat4.rotate(mvMatrix, Math.PI/2, [0,0,1]);
+
+    var shaderProgram = this.shaderPrograms[FRAG_SHADER_RGB_8];
+    this.gl.useProgram(shaderProgram);
+
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
+    this.gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute,
+                                this.squareVertexPositionBuffer.itemSize,
+                                this.gl.FLOAT,
+                                false,
+                                0,
+                                0);
+
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
+    this.gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, this.textureCoordBuffer.itemSize, this.gl.FLOAT, false, 0, 0);
+
+    // Clut texture
+    this.gl.activeTexture(this.gl.TEXTURE0);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.CLUT_TEXTURE);
+    this.gl.uniform1i(shaderProgram.samplerUniform, 0);
+
+    this.gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+    this.gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+
+    this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
+    this.gl.drawElements(this.gl.TRIANGLES, this.vertexIndexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
+    this.gl.viewport(0,0, this.canvas.width, this.canvas.height);
+}
+
 GLPainter.prototype.draw_image = function() {
     this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     //this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+
+    this.gl.disable(this.gl.BLEND);
+    this.draw_clut_bar();
+    this.update_projection_matrix();
+
     this.gl.enable(this.gl.BLEND);
     this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE);
 
-    this.update_projection_matrix();
     for(var imgidx in this.images) {
         var image = this.images[imgidx];
 
@@ -299,14 +344,13 @@ GLPainter.prototype.draw_image = function() {
 
 GLPainter.prototype.init = function(canvasid) {
     try {
-        var canvas = document.getElementById(canvasid);
-        this.gl = canvas.getContext("experimental-webgl");
-        //this.gl = canvas.getContext("webgl");
-        this.gl.viewportWidth = canvas.width;
-        this.gl.viewportHeight = canvas.height;
-        this.canvas = canvas;
+        // Initialize main gl-canvas
+        this.gl = this.canvas.getContext("experimental-webgl");
+        this.gl.viewportWidth = this.canvas.width;
+        this.gl.viewportHeight = this.canvas.height;
+
     } catch (e) {
-        alert("Failed to initialize GL-context");
+        alert("Failed to initialize GL-context" + e);
         return;
     }
 

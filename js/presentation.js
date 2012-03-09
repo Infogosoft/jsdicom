@@ -29,7 +29,7 @@ function fill_series_selection(series, selected_uid, painter_factory) {
             }
         })(uid));
         series_list.append(item);
-        var painter = painter_factory();
+        var painter = painter_factory(thumb_canvas.id);
         painter.init(thumb_canvas.id);
         painter.set_cluts(plain_red, plain_green, plain_blue);
         painter.set_file(series[uid].files[0]);
