@@ -96,6 +96,7 @@ function WindowLevelTool(app) {
         }
         this.last_mouse_pos_x = x;
         this.last_mouse_pos_y = y;
+        app.draw_image();
     }
 
     this.postdraw = function(canvas) {

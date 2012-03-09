@@ -139,6 +139,11 @@ GLPainter.prototype.reset_pan = function() {
     this.pan[1] = 0.0;
 }
 
+GLPainter.prototype.reset_windowing = function() {
+    this.ww = 200;
+    this.wl = 40;
+}
+
 GLPainter.prototype.set_cluts = function(clut_r, clut_g, clut_b) {
     this.clut_r = clut_r;
     this.clut_g = clut_g;
@@ -177,7 +182,6 @@ GLPainter.prototype.set_cluts = function(clut_r, clut_g, clut_b) {
 GLPainter.prototype.set_windowing = function(wl, ww) {
     this.ww = ww;
     this.wl = wl;
-    this.draw_image();
 }
 GLPainter.prototype.get_windowing = function() {
     return [this.wl, this.ww];

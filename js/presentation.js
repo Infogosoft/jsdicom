@@ -99,3 +99,46 @@ function draw_thumbnail_to_canvas(file, ctx, size) {
     }
     ctx.putImageData(imageData, 0, 0);
 }
+
+function create_image_infobox(viewarea) {
+    var infodiv = document.createElement('div');
+    infodiv.id = 'infobox';
+    infodiv.style.position = "absolute";
+    infodiv.style.top = "6px";
+    infodiv.style.color = "white";
+    infodiv.style.fontSize = "14px";
+    var infolist = document.createElement('ul');
+    infolist.style.margin = "0px";
+    infolist.style.paddingLeft = "7px";
+
+    // Create list item and two p-tags for each property
+    var attrs = [['size', 'Size'], ['ww', 'WW'], ['wl', 'WL'], ['sliceidx', 'Slice'], ['density', 'Density']];
+    for(var idx in attrs) {
+        var li = document.createElement('li');
+        li.style.listStyle = 'none';
+        li.style.margin = '0px';
+
+        var plabel = document.createElement('p');
+        plabel.style.cssFloat = 'left';
+        plabel.innerHTML = attrs[idx][1];
+        plabel.style.width = "50px";
+        plabel.style.padding = "0px";
+        plabel.style.margin = "0px";
+
+        var pvalue = document.createElement('p');
+        pvalue.style.cssFloat = 'left';
+        pvalue.id = attrs[idx][0]+'_info';
+        pvalue.style.padding = "0px";
+        pvalue.style.margin = "0px";
+
+        var cleardiv = document.createElement('div');
+        cleardiv.style.clear = 'both';
+
+        li.appendChild(plabel);
+        li.appendChild(pvalue);
+        li.appendChild(cleardiv);
+        infolist.appendChild(li);
+    }
+    infodiv.appendChild(infolist);
+    viewarea.appendChild(infodiv);
+}

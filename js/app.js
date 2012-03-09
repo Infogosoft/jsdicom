@@ -15,8 +15,8 @@ function log_element(elem_repr) {
 }
 
 
-function DcmApp(canvasid) {
-    this.canvasid = canvasid;
+function DcmApp(viewareaid) {
+    this.viewareaid = viewareaid;
     this.painter;
 
     this.last_mouse_canvas_pos = [NaN,NaN];
@@ -39,6 +39,8 @@ DcmApp.prototype.load_files = function(files)
 {
     var app = this;
     this.curr_file_idx = 0;
+    this.series = {};
+    this.files = [];
     this.files_loaded = 0;
     for(var i=0;i<files.length;++i) {
         this.load_file(files[i], i, files.length);
@@ -222,8 +224,6 @@ DcmApp.prototype.get_scale = function(scale) {
 }
 
 DcmApp.prototype.set_windowing = function(wl, ww) {
-    $("#ww_info").text(ww);
-    $("#wl_info").text(wl);
     return this.painter.set_windowing(wl, ww);
 }
 
@@ -246,7 +246,12 @@ DcmApp.prototype.draw_image = function() {
     var curr_file = this.files[this.curr_file_idx];
     if(curr_file == undefined)
         return;
+    $("#size_info").text(curr_file.Rows + "x" + curr_file.Columns);
+    $("#sliceidx_info").text(this.curr_file_idx+1 + "/" + this.files.length);
     $("#slider").slider("option", "value", this.curr_file_idx);
+    var windowing = this.painter.get_windowing();
+    $("#ww_info").text(windowing[0]);
+    $("#wl_info").text(windowing[1]);
     this.painter.set_file(curr_file);
     this.painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
     this.painter.draw_image();
@@ -274,9 +279,16 @@ DcmApp.prototype.activate_zoom_pan = function() {
     this.curr_tool.set_file(this.files[this.curr_file_idx]);
 }
 
+DcmApp.prototype.reset_levels = function() { 
+    this.painter.reset_pan();
+    this.painter.reset_windowing();
+    this.painter.reset_scale();
+    this.draw_image();
+}
+
 DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
     if (this.files.length <= this.curr_file_idx) {
-        $("#density").html("");
+        $("#density_info").html("");
         return;
     }
 
@@ -296,9 +308,9 @@ DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
     }
     
     if (coord != undefined) {
-        $("#density").html("value(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1));
+        $("#density_info").html("value(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1));
     } else {
-        $("#density").html("r,c = (" + row + ", " + col + "), val = " + ctval);
+        $("#density_info").html("r,c = (" + row + ", " + col + "), val = " + ctval);
     }
 }
 
@@ -350,9 +362,19 @@ DcmApp.prototype.rel_pos_from_event = function(evt) {
 }
 
 DcmApp.prototype.init = function() {
-    this.canvas = document.getElementById(this.canvasid);
+    // Create canvas inside this.divid
+    this.viewarea = document.getElementById(this.viewareaid);
+    this.canvas = document.createElement('canvas');
+    this.canvas.id = 'maincanvas'; // TODO: Unique of use of prefix
+    this.canvas.width = this.viewarea.clientWidth - 1;
+    this.canvas.height = this.viewarea.clientHeight - 1;
+    this.canvas.style.border = '1px solid #aaa';
+    this.viewarea.appendChild(this.canvas);
+    // Create infobox
+    create_image_infobox(this.viewarea);
+
     var app = this;
-    this.painter = new GLPainter(this.canvasid);
+    this.painter = new GLPainter(this.canvas.id);
     this.painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
     this.painter.clut_bar_enabled = true;
     //this.painter = new CanvasPainter();
@@ -409,21 +431,21 @@ DcmApp.prototype.init = function() {
     
     this.canvas.addEventListener('DOMMouseScroll', scrollListener, false);
 
-    document.getElementById("dcminfo1").onmousemove = this.canvas.onmousemove;
-    document.getElementById("dcminfo1").onmousedown = this.canvas.onmousedown;
-    document.getElementById("dcminfo1").onmouseup = this.canvas.onmouseup;
-    document.getElementById("dcminfo1").onmouseout = this.canvas.onmouseout;
-    document.getElementById("dcminfo1").onclick = this.canvas.onclick;
-    document.getElementById("dcminfo1").addEventListener('DOMMouseScroll', scrollListener, false);
+    document.getElementById("infobox").onmousemove = this.canvas.onmousemove;
+    document.getElementById("infobox").onmousedown = this.canvas.onmousedown;
+    document.getElementById("infobox").onmouseup = this.canvas.onmouseup;
+    document.getElementById("infobox").onmouseout = this.canvas.onmouseout;
+    document.getElementById("infobox").onclick = this.canvas.onclick;
+    document.getElementById("infobox").addEventListener('DOMMouseScroll', scrollListener, false);
 
     window.onresize = function(evt) {
         // Update canvas dimension and redraw
         clearTimeout(timer_event);
         function resize_canvas() {
             var container = document.getElementById('view-area');
-            var c = document.getElementById('c1');
-            c.width = container.clientWidth - 20;
-            c.height = container.clientHeight - 20;
+            var c = document.getElementById('maincanvas');
+            c.width = container.clientWidth - 1;
+            c.height = container.clientHeight - 1;
             app.painter.onresize();
         }
         timer_event = setTimeout(resize_canvas, 10);

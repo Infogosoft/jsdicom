@@ -180,6 +180,7 @@ tr.even {
     border: 1px solid #aaa;
     list-style:none;
     padding: 0px;
+    margin-top: 38px;
 }
 
 #series-selection > li {
@@ -206,7 +207,7 @@ tr.even {
     bottom: 10px;
     left: 10px;
     right: 10px;
-    top: 52px;
+    top: 70px;
 }
 
 #c1 {

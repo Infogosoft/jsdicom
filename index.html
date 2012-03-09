@@ -29,7 +29,7 @@
     <script type="text/javascript" src="js/presentation.js"></script>
     <script type="text/javascript">
 
-    var app = new DcmApp('c1');
+    var app = new DcmApp('view-area');
 
     function load_urllist_from_url(url) {
         app.load_urllist_from_url(url);
@@ -49,12 +49,6 @@
 
 
     $(document).ready(function() {
-        // Set size of canvas with js, otherwise css-scaling will be done
-        var container = document.getElementById('view-area');
-        var c = document.getElementById('c1');
-        c.width = container.clientWidth - 20;
-        c.height = container.clientHeight - 20;
-
         app.init();
         $("input[type=file]").change(function(evt) {
             //app.load_files(evt);
@@ -114,6 +108,9 @@
             $(this).addClass("butt-selected");
             app.activate_zoom_pan();
         });
+        $("#butt-reset").click(function() {
+            app.reset_levels();
+        });
         $("#clut-select").change(function() {
             app.set_clut($(this).val());
         });
@@ -165,22 +162,22 @@
                 </optgroup>
             </select>
             <div id="button-bar-horz">
-                <div id="butt-measure" class="tool-button">Measure</div>
+                <!--<div id="butt-measure" class="tool-button">Measure</div>-->
                 <div id="butt-windowing" class="tool-button butt-selected">Windowing</div>
                 <div id="butt-zooming" class="tool-button">Zoom/Pan</div>
+                <div id="butt-reset" class="tool-button">Reset</div>
             </div>
-            <div id="info" >
+            <!--    jj<div id="info" >
               Density: <div id="density"></div>
-            </div>
+            </div>-->
         </div>
 
-        <div id="view-area">
-            <div class="slider-holder">
-                <div id="slider"></div>
-            </div>
-            <canvas id="c1"></canvas>
+        <div class="slider-holder">
+            <div id="slider"></div>
         </div>
-        <div id="dcminfo1">
+        <div id="view-area">
+        </div>
+        <!--<div id="dcminfo1">
             <ul>
                 <li id="imgsize">
                     <p class="img-info-label">Size:</p>
@@ -197,15 +194,15 @@
             </ul>
         </div>
         <div id="dcminfo2">
-        </div>
+        </div>-->
     </div>
-    <div id="right-sidebar">
+    <!--<div id="right-sidebar">
         <div style="clear: both;"></div>
         <div class="box">
             <h2>Data</h2>
             <div id="dicomheader"></div>
         </div>
-    </div>
+    </div>-->
     <!-- Dialogs -->
     <div id="open-dialog" class="hidden" title="Open files" style="display: none;">
         <p>Select some files</p>
