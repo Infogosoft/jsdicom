@@ -428,8 +428,14 @@ DcmApp.prototype.init = function() {
             app.curr_tool.scroll(evt.detail);
         return false;
     }
+    function wheelListener(evt) {
+        if (app.curr_tool.scroll !== undefined)
+            app.curr_tool.scroll(evt.wheelDeltaY/3);
+        return false;
+    }
     
     this.canvas.addEventListener('DOMMouseScroll', scrollListener, false);
+    this.canvas.addEventListener('mousewheel', wheelListener, false);
 
     document.getElementById("infobox").onmousemove = this.canvas.onmousemove;
     document.getElementById("infobox").onmousedown = this.canvas.onmousedown;
