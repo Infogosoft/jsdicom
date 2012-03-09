@@ -104,13 +104,6 @@ body {
     padding-left: 10px;
 }
 
-
-
-#dicomheader {
-    background: #000;
-    color: #3f3;
-}
-
 td {
     padding:0;
     margin:0;
@@ -210,13 +203,10 @@ tr.even {
     top: 70px;
 }
 
-#c1 {
-    border: 1px solid #aaa;
-}
-
 .box h2 {
     -moz-border-bottom-colors: none;
     background: -moz-linear-gradient(center top , #829AA8, #405A6A) repeat scroll 0 0 transparent;
+    background: -webkit-linear-gradient(#829AA8, #405A6A) repeat scroll 0 0 transparent;
     border-color: #677C89 #677C89 #6B808D;
     border-radius: 5px 5px 0 0;
     border-style: solid;
@@ -229,64 +219,3 @@ tr.even {
     position: relative;
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.7);
 }
-
-#dcminfo1 {
-    position: absolute;
-    top: 66px;
-    color: white;
-    font-size: 14px;
-}
-
-#dcminfo1 ul {
-    padding-left: 18px;
-}
-#dcminfo1 li {
-    list-style: none;
-    padding-left: 0px;
-}
-
-#dcminfo1 li p {
-    float: left;
-    padding: 0px;
-    margin: 0px;
-}
-
-.img-info-label {
-    width: 50px;
-}
-
-/* Transition stuffs */
-.flipper .front {
-    -moz-backface-visibility: hidden;
-    -moz-transform: rotateY(0deg);
-    -moz-transition: all 0.4s ease-in-out 0s;
-    background: none repeat scroll 0 0 #6B7077;
-    border: 1px solid #CCCCCC;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.9);
-    height: inherit;
-    position: absolute;
-    z-index: 900;
-    perspective: 150px;
-}
-.flipper.flipped .front {
-    -moz-transform: rotateY(180deg);
-}
-
-.flipper .back {
-    -moz-backface-visibility: hidden;
-    -moz-transform: rotateY(-180deg);
-    -moz-transition: all 0.4s ease-in-out 0s;
-    -moz-transform-style: preserve-3d;
-    -moz-transform-origin: 100% 100%;
-    border: 1px solid #CCCCCC;
-    float: none;
-    height: inherit;
-    position: absolute;
-    z-index: 800;
-    perspective: 150px;
-}
-
-.flipper.flipped .back {
-    -moz-transform: rotateY(0deg);
-}
-

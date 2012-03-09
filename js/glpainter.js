@@ -100,7 +100,8 @@ GLPainter.prototype.file_to_texture = function(dcmfile) {
                        0,                        // border
                        internalFormat,           // format
                        this.gl.UNSIGNED_BYTE,    // type
-                       Uint8Array(dcmfile.PixelData.buffer, dcmfile.PixelData.byteOffset)); // data
+                       new Uint8Array(dcmfile.PixelData.buffer, dcmfile.PixelData.byteOffset)); // data
+                       //Uint8Array(dcmfile.PixelData.buffer, dcmfile.PixelData.byteOffset)); // TODO: type conversion instead of new array?
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
