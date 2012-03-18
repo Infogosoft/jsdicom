@@ -1,7 +1,7 @@
 $(document).ready(function(){
     test("Work with GL Unproject", function() {
-        glp = new GLPainter();
-        glp.init("testcanvas")
+        glp = new GLPainter("testcanvas");
+        glp.init()
         glp.update_projection_matrix();
         glp.rows = 1024;
         glp.columns = 512;

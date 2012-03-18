@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>DICOM</title>
+
+    <script type="text/javascript" src="../js/glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="../js/glpainter.js"></script>
+    <script type="text/javascript" src="../js/shaders.js"></script>
+    <script type="text/javascript" src="../jquery/js/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
+
+    <script type="text/javascript" src="../js/dcmdict.js"></script>
+    <script type="text/javascript" src="../js/cluts/plain.js"></script>
+    <script type="text/javascript" src="../js/cluts/rainbow.js"></script>
+    <script type="text/javascript" src="../js/cluts/blackbody.js"></script>
+    <script type="text/javascript" src="../js/tools.js"></script>
+    <script type="text/javascript" src="../js/binutils.js"></script>
+    <script type="text/javascript" src="../js/utilities.js"></script>
+    <script type="text/javascript" src="../js/dcmserie.js"></script>
+    <script type="text/javascript" src="../js/dcmfile.js"></script>
+    <script type="text/javascript" src="../js/dicomparser.js"></script>
+    <script type="text/javascript" src="../js/transfersyntax.js"></script>
+    <script type="text/javascript" src="../js/presentation.js"></script>
+    <script type="text/javascript" src="file_fixtures.js"></script>
+
+    <script type="text/javascript">
+    var pixel_data;
+    var file1, file2;
+    $(document).ready(function() {
+    
+        var filedata1 = base64_to_typedarray(filefixture1);
+        var filedata2 = base64_to_typedarray(filefixture2);
+
+        var parser = new DicomParser(filedata1);
+        file1 = parser.parse_file();
+
+        var parser = new DicomParser(filedata2);
+        file2 = parser.parse_file();
+
+        painter = new GLPainter("c1");
+        painter.init();
+        painter.fuse_files(file1, file2, 0.3);
+        //painter.fuse_files(file1, file2, 0.5);
+        //painter.set_file(file1);
+        painter.set_windowing(40, 200);
+        painter.set_cluts(plain_red, plain_green, plain_blue);
+        painter.draw_image();
+    });
+    </script>
+
+</head>
+<body>
+    <canvas id="c1" width="512" height="512"></canvas>
+</body>
+</html>
