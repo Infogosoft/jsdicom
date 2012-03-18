@@ -104,10 +104,10 @@ function WindowLevelTool(app) {
             var xdiff = x - this.last_mouse_pos_x;
             var ydiff = y - this.last_mouse_pos_y
             app.set_windowing(curr_windowing[0] + xdiff, Math.max(curr_windowing[1] + ydiff, 0));
+            app.draw_image();
         }
         this.last_mouse_pos_x = x;
         this.last_mouse_pos_y = y;
-        app.draw_image();
     }
 
     this.postdraw = function(canvas) {
@@ -139,7 +139,7 @@ function ZoomPanTool(app) {
         this.orig_pan[0] = op[0];
         this.orig_pan[1] = op[1];
         // TODO: this should be the painter's (or perhaps the app's) responsibility
-        this.pixel_size = 2.0/app.painter.gl.viewportHeight;
+        this.pixel_size = app.painter.pan_unit();
     }
 
     this.mouseup = function(canvas_pos, image_pos) {

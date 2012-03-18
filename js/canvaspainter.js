@@ -9,28 +9,24 @@
 *
 * You should have received a copy of the GNU General Public License along with jsdicom. If not, see http://www.gnu.org/licenses/.
 */
-function CanvasPainter() {
-    this.canvas;
+function CanvasPainter(canvasid) {
+    this.canvas = document.getElementById(canvasid);
+    this.tempcanvas = document.createElement("canvas");
     this.ww;
     this.wl;
     this.file;
-    this.r_clut;
-    this.g_clut;
-    this.b_clut;
-}
-
-CanvasPainter.prototype.is_supported = function() {
-    return window.CanvasRenderingContext;
+    this.scale = 1;
+    this.pan = [0,0];
 }
 
 CanvasPainter.prototype.set_file = function(file) {
     this.file = file;
 }
 
-CanvasPainter.prototype.set_cluts = function(r_clut, g_clut, b_clut) {
-    this.r_clut = r_clut;
-    this.g_clut = g_clut;
-    this.b_clut = b_clut;
+CanvasPainter.prototype.set_cluts = function(clut_r, clut_g, clut_b) {
+    this.clut_r = clut_r;
+    this.clut_g = clut_g;
+    this.clut_b = clut_b;
 }
 
 CanvasPainter.prototype.set_windowing = function(wl, ww) {
@@ -38,35 +34,94 @@ CanvasPainter.prototype.set_windowing = function(wl, ww) {
     this.wl = wl;
 }
 
+CanvasPainter.prototype.reset_windowing = function() {
+    this.ww = 200;
+    this.wl = 40;
+}
+
 CanvasPainter.prototype.set_scale = function(scale) {
     this.scale = scale;
+    this.draw_image();
 }
+
 CanvasPainter.prototype.get_scale = function(scale) {
     return this.scale;
+}
+
+CanvasPainter.prototype.reset_scale = function(scale) {
+    this.scale = 1.0;
 }
 
 CanvasPainter.prototype.get_windowing = function() {
     return [this.wl, this.ww];
 }
 
-CanvasPainter.prototype.init = function(canvasid) {
-    this.canvas = document.getElementById(canvasid);
+CanvasPainter.prototype.set_pan = function(panx, pany) {
+    this.pan[0] = panx;
+    this.pan[1] = pany;
+    this.draw_image();
+}
+
+CanvasPainter.prototype.get_pan = function() {
+    return this.pan;
+}
+
+CanvasPainter.prototype.reset_pan = function() {
+    this.pan[0] = 0.0;
+    this.pan[1] = 0.0;
+}
+
+CanvasPainter.prototype.pan_unit = function() {
+    return 1;
+}
+
+CanvasPainter.prototype.init = function() {
+}
+
+CanvasPainter.prototype.onresize = function() {
+    this.canvas.width = this.canvas.clientWidth;
+    this.canvas.height = this.canvas.clientHeight;
+    this.draw_image();
+}
+
+CanvasPainter.prototype.unproject = function(canvas_pos) {
+    var canvas_scale = this.canvas.height/this.file.Rows;
+    var targetWidth = this.file.Rows*this.scale*canvas_scale;
+    var targetHeight = this.file.Columns*this.scale*canvas_scale;
+    var xoffset = (this.canvas.width-targetWidth)/2+this.pan[0];
+    var yoffset = (this.canvas.height-targetHeight)/2+this.pan[1];
+    var imagepos = [0,0];
+    var xscale = this.file.Columns/targetWidth;
+    var yscale = this.file.Rows/targetHeight;
+    imagepos[0] = Math.round((canvas_pos[0]-xoffset)*xscale);
+    imagepos[1] = Math.round((canvas_pos[1]-yoffset)*yscale);//*(this.canvas.height/targetHeight);
+    return imagepos;
+}
+
+CanvasPainter.prototype.image_coords_to_row_column = function(pt) {
+    return [pt[0], pt[1]];
 }
 
 CanvasPainter.prototype.draw_image = function() {
-    this.canvas.width = this.file.rows;
-    this.canvas.height = this.file.rows;
+    if(this.file == undefined)
+        return;
     var ctx = this.canvas.getContext("2d");
+    ctx.fillStyle = "rgb(0,0,0)";
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    var imageData = ctx.createImageData(this.file.columns, this.file.rows);
+    this.tempcanvas.width = this.file.Rows;
+    this.tempcanvas.height = this.file.Columns;
+    var tempctx = this.tempcanvas.getContext("2d");
+
+    var imageData = tempctx.createImageData(this.file.Columns, this.file.Rows);
     
     var lower_bound = this.wl - this.ww/2.0;
     var upper_bound = this.wl + this.ww/2.0;
-    for(var row=0;row<this.file.rows;++row) {
-        for(var col=0;col<this.file.columns;++col) {
-            var data_idx = (col + row*this.file.columns);
-            var intensity = this.file.pixel_data[data_idx];
-            intensity = intensity * this.file.rescaleSlope + this.file.rescaleIntercept;
+    for(var row=0;row<this.file.Rows;++row) {
+        for(var col=0;col<this.file.Columns;++col) {
+            var data_idx = (col + row*this.file.Columns);
+            var intensity = this.file.PixelData[data_idx];
+            intensity = intensity * this.file.RescaleSlope + this.file.RescaleIntercept;
             var intensity = (intensity - lower_bound)/(upper_bound - lower_bound);
             if(intensity < 0.0)
                 intensity = 0.0;
@@ -75,29 +130,32 @@ CanvasPainter.prototype.draw_image = function() {
 
             intensity *= 255.0;
 
-            var canvas_idx = (col + row*this.file.columns)*4;
+            var canvas_idx = (col + row*this.file.Columns)*4;
             var rounded_intensity = Math.round(intensity);
-            imageData.data[canvas_idx] = this.r_clut[rounded_intensity];
-            imageData.data[canvas_idx+1] = this.b_clut[rounded_intensity];
-            imageData.data[canvas_idx+2] = this.g_clut[rounded_intensity];
+            imageData.data[canvas_idx] = this.clut_r[rounded_intensity];
+            imageData.data[canvas_idx+1] = this.clut_g[rounded_intensity];
+            imageData.data[canvas_idx+2] = this.clut_b[rounded_intensity];
             imageData.data[canvas_idx+3] = 0xFF;
         }
     }
-    ctx.putImageData(imageData, 0, 0);
-        
-    // Call current tool for post draw operations
-    //this.curr_tool.postdraw(ctx);
-    //this.refreshmousemoveinfo();
-    //var canvas = document.getElementById(this.canvasid);
-    //var ctx = canvas.getContext('2d');
-    //ctx.clearRect(0, 0, this.file.rows, this.file.rows);
-    //var scaled_width = this.file.rows*this.scale_factor;
-    //var scaled_height = this.file.columns*this.scale_factor;
-    //var offset_x = (this.file.rows-scaled_width-this.pan[0])/2;
-    //var offset_y = (this.file.columns-scaled_height-this.pan[1])/2;
-    //ctx.drawImage(this.canvas, offset_x, offset_y, scaled_width, scaled_height);
-    //ctx.drawImage(this.canvas, 0, 0, 512, 512);
-    ctx.strokeStyle = 'white';
-    ctx.strokeText("WL: " + this.wl, 5, 20);
-    ctx.strokeText("WW: " + this.ww, 5, 40);
+    tempctx.putImageData(imageData, 0, 0);
+
+    var canvas_scale = this.canvas.height/this.file.Rows;
+    var targetWidth = this.file.Rows*this.scale*canvas_scale;
+    var targetHeight = this.file.Columns*this.scale*canvas_scale;
+    var xoffset = (this.canvas.width-targetWidth)/2;
+    var yoffset = (this.canvas.height-targetHeight)/2;
+    ctx.drawImage(this.tempcanvas, xoffset+this.pan[0], yoffset+this.pan[1], targetWidth, targetHeight);
+}
+
+CanvasPainter.prototype.canvas_scale = function() {
+    return this.canvas.height/this.file.Rows;
+}
+
+CanvasPainter.prototype.target_height = function(canvas_scale) {
+    return this.file.Columns*this.scale*canvas_scale;
+}
+
+CanvasPainter.prototype.target_width = function(canvas_scale) {
+    return this.file.Columns*this.scale*canvas_scale;
 }

@@ -49,10 +49,6 @@ function GLPainter(canvasid) {
     this.clut_bar_enabled = false;
 }
 
-GLPainter.prototype.is_supported = function() {
-    return window.WebGLRenderingContext;
-}
-
 GLPainter.prototype.fuse_files = function(file1, file2, alpha) {
     this.images.length = 0;
     this.images.push(new ImageSlice(file1,
@@ -493,3 +489,6 @@ GLPainter.prototype.init_buffers = function() {
     this.vertexIndexBuffer.numItems = 6;
 }
 
+GLPainter.prototype.pan_unit = function() {
+    return 2.0/this.gl.viewportHeight;
+}

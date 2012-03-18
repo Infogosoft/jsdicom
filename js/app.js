@@ -180,7 +180,7 @@ DcmApp.prototype.organize_file = function(file) {
 
 
 DcmApp.prototype.setup_series_selection = function() {
-    fill_series_selection(this.series, this.curr_series_uid, function(canvasid) { return new GLPainter(canvasid); });
+    fill_series_selection(this.series, this.curr_series_uid, this.create_painter);
     this.set_series(this.curr_series_uid);
 }
 
@@ -307,7 +307,7 @@ DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
     if (curr_file == undefined)
         return;
 
-    var rowcol = this.painter.image_coords_to_row_column(image_pos);
+    var rowcol = image_pos;
     var row = rowcol[0];
     var col = rowcol[1];
 
@@ -372,6 +372,14 @@ DcmApp.prototype.rel_pos_from_event = function(evt) {
     return rel_pos;
 }
 
+DcmApp.prototype.create_painter = function(canvasid) {
+    if(window.WebGLRenderingContext)
+        return new GLPainter(canvasid);
+    if(window.CanvasRenderingContext)
+        return new CanvasPainter(canvasid);
+    throw "Neither WebGL or canvas enabled";
+}
+
 DcmApp.prototype.init = function() {
     // Create canvas inside this.divid
     this.viewarea = document.getElementById(this.viewareaid);
@@ -385,11 +393,11 @@ DcmApp.prototype.init = function() {
     create_image_infobox(this.viewarea);
 
     var app = this;
-    this.painter = new GLPainter(this.canvas.id);
+    this.painter = this.create_painter(this.canvas.id);//new GLPainter(this.canvas.id);
     this.painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
     this.painter.clut_bar_enabled = true;
-    //this.painter = new CanvasPainter();
     this.painter.init();
+
     this.canvas.onmousemove = function(evt) {
         app.last_mouse_canvas_pos = app.rel_pos_from_event(evt);
         app.last_mouse_image_pos = app.painter.unproject(app.last_mouse_canvas_pos);
@@ -466,9 +474,5 @@ DcmApp.prototype.init = function() {
             app.painter.onresize();
         }
         timer_event = setTimeout(resize_canvas, 10);
-        
-        //setTimeout("app.painter.onresize()", 100);
-        //this.painter.init(this.canvasid);
-        //this.painter.draw_image();
     }
 }
