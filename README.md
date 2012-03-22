@@ -5,11 +5,11 @@ Dicom library and viewer written in javascript.
 The dicom parser can handle Implicit VR Little-endian, Explicit VR Little-endian and Explicit VR Big-endian. Sequences are not yet handled correctly.
 
 Parsing files:
-```javascript
-var parser = new DicomParser(buffer);
-var file = parser.parse_file();
-console.log(file.PatientsName);
-```
+
+    var parser = new DicomParser(buffer);
+    var file = parser.parse_file();
+    console.log(file.PatientsName);
+
 
 ##Visualization
 Visualisation is done with WebGL. The pixel data is converted to a WebGL texture. Different fragment shaders are used for different photometric interpretations. Windowing and CLUT is done in shaders.
