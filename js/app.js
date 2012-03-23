@@ -307,7 +307,7 @@ DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
     if (curr_file == undefined)
         return;
 
-    var rowcol = image_pos;
+    var rowcol = app.painter.image_coords_to_row_column(image_pos);
     var row = rowcol[0];
     var col = rowcol[1];
 
