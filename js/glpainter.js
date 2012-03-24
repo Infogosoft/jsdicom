@@ -297,13 +297,16 @@ GLPainter.prototype.draw_image = function() {
 
     this.gl.disable(this.gl.BLEND);
     this.draw_clut_bar();
-    this.update_projection_matrix();
 
     this.gl.enable(this.gl.BLEND);
     this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE);
 
     for(var imgidx in this.images) {
+        this.update_projection_matrix();
         var image = this.images[imgidx];
+        if(image.file.PixelAspectRatio != undefined) {
+            mat4.scale(this.mvMatrix, [100/image.file.PixelAspectRatio, 1, 1]);
+        }
 
         var shaderProgram;
         switch(jQuery.trim(image.file.PhotometricInterpretation)) {
