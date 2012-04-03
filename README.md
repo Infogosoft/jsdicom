@@ -2,7 +2,7 @@
 Dicom library and viewer written in javascript.
 
 ##Dicom parsing
-The dicom parser can handle Implicit VR Little-endian, Explicit VR Little-endian and Explicit VR Big-endian. Sequences are not yet handled correctly.
+The dicom parser can handle Implicit VR Little-endian, Explicit VR Little-endian and Explicit VR Big-endian. ~~Sequences are not yet handled correctly.~~
 
 Parsing files:
 
