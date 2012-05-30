@@ -23,10 +23,8 @@ uniform sampler2D uClutSampler;\
 void main(void) {  \
     highp vec4 texcolor = texture2D(uSampler, vTextureCoord); \
     highp float intensity = texcolor.r*65536.0;\
-    highp float wl = uWL;\
-    highp float ww = uWW;\
-    highp float lower_bound = wl - ww/2.0;\
-    highp float upper_bound = wl + ww/2.0;\
+    highp float lower_bound = uWL - uWW/2.0;\
+    highp float upper_bound = uWL + uWW/2.0;\
     intensity = (intensity - lower_bound)/(upper_bound - lower_bound);\
 \
     gl_FragColor = vec4(intensity, intensity, intensity, uAlpha);\
@@ -49,14 +47,11 @@ void main(void) {  \
     highp float rescaleIntercept = uRI;\
     highp float rescaleSlope = uRS;\
     intensity = intensity * rescaleSlope + rescaleIntercept;\
-    highp float wl = uWL;\
-    highp float ww = uWW;\
-    highp float lower_bound = wl - ww/2.0;\
-    highp float upper_bound = wl + ww/2.0;\
+    highp float lower_bound = uWL - uWW/2.0;\
+    highp float upper_bound = uWL + uWW/2.0;\
     intensity = (intensity - lower_bound)/(upper_bound - lower_bound);\
     highp vec4 clutcolor = texture2D(uClutSampler, vec2(intensity, intensity)); \
     gl_FragColor = vec4(clutcolor.r, clutcolor.g, clutcolor.b, uAlpha);\
-\
 }";
 
 var fragment_shader_rgb_8 = "\

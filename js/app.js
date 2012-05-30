@@ -261,8 +261,8 @@ DcmApp.prototype.draw_image = function() {
     $("#sliceidx_info").text(this.curr_file_idx+1 + "/" + this.files.length);
     $("#slider").slider("option", "value", this.curr_file_idx);
     var windowing = this.painter.get_windowing();
-    $("#ww_info").text(windowing[0]);
-    $("#wl_info").text(windowing[1]);
+    $("#ww_info").text(windowing[1]);
+    $("#wl_info").text(windowing[0]);
     this.painter.set_file(curr_file);
     this.painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
     this.painter.draw_image();

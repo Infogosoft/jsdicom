@@ -11,7 +11,8 @@
 */
 var FRAG_SHADER_8 = 0;
 var FRAG_SHADER_16 = 1;
-var FRAG_SHADER_RGB_8 = 2;
+var FRAG_SHADER_16_TWO_COMPLEMENTS = 2;
+var FRAG_SHADER_RGB_8 = 3;
 
 function ImageSlice(file, texture, rs, ri, alpha) {
     this.file = file;
@@ -78,6 +79,7 @@ GLPainter.prototype.set_file = function(dcmfile) {
 
 GLPainter.prototype.file_to_texture = function(dcmfile) {
     var internalFormat;
+    raw_data = dcmfile.get_element(dcmdict.PixelData).data;
     switch(jQuery.trim(dcmfile.PhotometricInterpretation)) {
     case "MONOCHROME1":
         // TODO: MONOCHROME1 should use inverse cluts.
@@ -86,6 +88,16 @@ GLPainter.prototype.file_to_texture = function(dcmfile) {
             internalFormat = this.gl.LUMINANCE;
         } else {
             internalFormat = this.gl.LUMINANCE_ALPHA;
+            if(dcmfile.PixelRepresentation == 0x01) {
+                if(!dcmfile.PixelRepresentationPatched) {
+                    //var view16bit = new Uint16Array(dcmfile.PixelData.data.buffer, dcmfile.PixelData.data.byteOffset, dcmfile.PixelData.length/2);
+                    console.log("Patching");
+                    for(var i=0;i<dcmfile.PixelData.length;++i) {
+                        dcmfile.PixelData[i] = dcmfile.PixelData[i] ^ 0x8000;
+                    }
+                    dcmfile.PixelRepresentationPatched = true;
+                }
+            }
         }
         break;
     case "RGB":
@@ -107,10 +119,9 @@ GLPainter.prototype.file_to_texture = function(dcmfile) {
                        0,                        // border
                        internalFormat,           // format
                        this.gl.UNSIGNED_BYTE,    // type
-                       new Uint8Array(dcmfile.PixelData.buffer, dcmfile.PixelData.byteOffset)); // data
-                       //Uint8Array(dcmfile.PixelData.buffer, dcmfile.PixelData.byteOffset)); // TODO: type conversion instead of new array?
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+                       dcmfile.get_element(dcmdict.PixelData).data);// Get raw Uint8array
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
                   
@@ -188,8 +199,8 @@ GLPainter.prototype.set_cluts = function(clut_r, clut_g, clut_b) {
 }
 
 GLPainter.prototype.set_windowing = function(wl, ww) {
-    this.ww = ww;
     this.wl = wl;
+    this.ww = ww;
 }
 GLPainter.prototype.get_windowing = function() {
     return [this.wl, this.ww];
@@ -350,12 +361,14 @@ GLPainter.prototype.draw_image = function() {
 
         this.set_matrix_uniforms(shaderProgram);
         this.set_window_uniforms(shaderProgram, image);
+
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
         this.gl.drawElements(this.gl.TRIANGLES, this.vertexIndexBuffer.numItems, this.gl.UNSIGNED_SHORT, 0);
     }
 
 
 }
+off = (1 << (15 - 1));
 
 GLPainter.prototype.init = function(canvasid) {
     try {
@@ -447,7 +460,11 @@ GLPainter.prototype.set_matrix_uniforms = function(shaderProgram) {
 }
 
 GLPainter.prototype.set_window_uniforms = function(shaderProgram, image) {
-    this.gl.uniform1f(shaderProgram.wlUniform, this.wl);
+    // Hack for files with pixel representation in two complements
+    var wl = this.wl;
+    if(image.file.PixelRepresentation == 0x01)
+        wl += 32768.0;
+    this.gl.uniform1f(shaderProgram.wlUniform, wl);
     this.gl.uniform1f(shaderProgram.wwUniform, this.ww);
     this.gl.uniform1f(shaderProgram.rsUniform, image.rs);
     this.gl.uniform1f(shaderProgram.riUniform, image.ri);
