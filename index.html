@@ -3,15 +3,15 @@
 
 <head>
     <title>DICOM</title>
-    <link rel="stylesheet" type="text/css" href="jquery/css/custom-theme/jquery-ui-1.8.16.custom.css" />
+    <link rel="stylesheet" type="text/css" href="jquery/css/smoothness/jquery-ui-1.8.20.custom.css" />
     <link rel="stylesheet" type="text/css" href="main.css" />
 
     <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
     <script type="text/javascript" src="js/glpainter.js"></script>
     <script type="text/javascript" src="js/shaders.js"></script>
     <script type="text/javascript" src="js/canvaspainter.js"></script>
-    <script type="text/javascript" src="jquery/js/jquery-1.6.2.min.js"></script>
-    <script type="text/javascript" src="jquery/js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script type="text/javascript" src="jquery/js/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="jquery/js/jquery-ui-1.8.20.custom.min.js"></script>
 
     <!-- External jsdicom-lib -->
     <script type="text/javascript" src="jsdicom-lib/src/dcmdict.js"></script>
@@ -19,6 +19,7 @@
     <script type="text/javascript" src="jsdicom-lib/src/dcmfile.js"></script>
     <script type="text/javascript" src="jsdicom-lib/src/dicomparser.js"></script>
     <script type="text/javascript" src="jsdicom-lib/src/transfersyntax.js"></script>
+    <script type="text/javascript" src="jsdicom-lib/src/qr.js"></script>
 
     <script type="text/javascript" src="js/GLU.js"></script>
     <script type="text/javascript" src="js/cluts/plain.js"></script>
@@ -93,6 +94,51 @@
                     }
                 });
         });
+/*
+        $("#browse").click(function() {
+            $("#browse-dialog").dialog({
+                    modal: true,
+                    buttons: {
+                        'Ok': function() {
+                            var file_input = $("input[type=file]")[0];
+                            app.load_files(file_input.files);
+                            $(this).dialog('close');
+                        },
+                        'Cancel': function() {
+                            $(this).dialog('close');
+                        }
+                    }
+                });
+            $("#browse-pacs-radio").empty();
+            listPacsNames(function(pacsnames) {
+              $.each(pacsnames, function(i, name) {
+                $("#browse-pacs-radio").append('<input type="radio" id="radio' + i + '" name="radio" /><label for="radio' + i + '">'+ name + '</label>');
+              });
+              $("#browse-pacs-radio").buttonset();
+              $.each(pacsnames, function(i, name) {
+                $("#radio" + i).click(function (e) {
+                  console.log("radio" + i + " clicked");
+                  $("#studiesaccordion").accordion("destroy");
+                  $("#studiesaccordion").empty();
+                  findAllPatients(name, function(patients) {
+                    $.each(patients, function(i, patient) {
+                      $("#studiesaccordion").append('<h3><a href="#">' + patient["Patient's Name"] + '</a></h3>');
+                      $("#studiesaccordion").append('<div id="pat-' + patient["Patient ID"] + '"><ul id="ul-pat-' + patient["Patient ID"] + '"></ul></div>');
+		      findSeriesInStudy(name, patient["Patient ID"], '', function(serieslist) {
+		        $.each(serieslist, function(i, series) {
+		          $("#ul-pat-" + patient["Patient ID"]).append('<li><a href="#">' + series['Modality'] + " " + series['Series Number'] + '</a></li>');
+  			  $("#studiesaccordion").accordion("resize");
+		        });
+                      });
+		    });
+                    $("#studiesaccordion").accordion({collapsible: true}).accordion("resize");
+		  });
+                  return false;
+		});
+              });
+            });
+        });
+ */
 
         $("#butt-measure").click(function() {
             //$(this).parent().find("div").removeClass("butt-selected");
@@ -144,6 +190,7 @@
         <h2>File browser</h2>
         <div class="box-content">
             <div id="open" class="tool-button">Open</div>
+	    <!-- <div id="browse" class="tool-button">Browse PACS</div> -->
             <ul id="series-selection"></ul>
         </div>
     </div>
@@ -188,6 +235,15 @@
             <label for="file">File</label>
             <input type="file" name="file" id="file" multiple="multiple"/>
         </form>
+    </div>
+    <div id="browse-dialog" class="hidden" title="Browse PACS" style="display: none;">
+      <form>
+        PACS:
+      	<div id="browse-pacs-radio">
+	</div> 
+      </form>
+	<div id="studiesaccordion">
+	</div>
     </div>
     <canvas id="secondary_canvas" width="512" height="512" style="display: none;"></canvas>
     <div id="metadata-dialog" class="hidden" title="Metadata" style="display: none;">
