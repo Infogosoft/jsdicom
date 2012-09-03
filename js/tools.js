@@ -70,7 +70,6 @@ function MeasureTool(app) {
             canvas.lineWidth   = 4;
             canvas.stroke();
             canvas.closePath()
-
         }
         
     }

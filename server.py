@@ -19,7 +19,7 @@ class CustomHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path=='/listsopinstanceuids':
-            resp = [{'sopInstanceUID': uid, 'href': '/getdicom/%s' % uid} for uid in uid_to_file]
+            resp = [{'sopInstanceUID': uid, 'href': 'http://localhost:%d/getdicom/%s' % (PORT, uid)} for uid in uid_to_file]
             self.send_response(200)
             self.send_header('Content-type','application/json')
             self.end_headers()

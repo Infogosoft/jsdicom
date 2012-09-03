@@ -72,6 +72,7 @@ DcmApp.prototype.load_urllist_from_url = function(url)
     var app = this;
     this.curr_file_idx = 0;
     this.files_loaded = 0;
+    var files = [];
 
     $.ajax({
         async: false,
@@ -180,7 +181,7 @@ DcmApp.prototype.organize_file = function(file) {
 
 
 DcmApp.prototype.setup_series_selection = function() {
-    fill_series_selection(this.series, this.curr_series_uid, this.create_painter);
+    fill_series_selection(this.series, this.curr_series_uid, function(cid) { return new CanvasPainter(cid) });
     this.set_series(this.curr_series_uid);
 }
 
@@ -372,12 +373,10 @@ DcmApp.prototype.rel_pos_from_event = function(evt) {
     return rel_pos;
 }
 
-DcmApp.prototype.create_painter = function(canvasid) {
-    if(window.WebGLRenderingContext)
-        return new GLPainter(canvasid);
-    if(window.CanvasRenderingContext)
-        return new CanvasPainter(canvasid);
-    throw "Neither WebGL or canvas enabled";
+DcmApp.prototype._init_painter = function(painter) {
+    painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
+    painter.clut_bar_enabled = true;
+    painter.init();
 }
 
 DcmApp.prototype.init = function() {
@@ -392,12 +391,28 @@ DcmApp.prototype.init = function() {
     // Create infobox
     create_image_infobox(this.viewarea);
 
-    var app = this;
-    this.painter = this.create_painter(this.canvas.id);//new GLPainter(this.canvas.id);
-    this.painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
-    this.painter.clut_bar_enabled = true;
-    this.painter.init();
+    var painters = [
+        function(cid) { return new GLPainter(cid); },
+        function(cid) { return new CanvasPainter(cid); },
+    ];
+    for(var i in painters) {
+        var painter = painters[i](this.canvas.id);
+        try {
+            painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
+            painter.clut_bar_enabled = true;
+            painter.init();
+            this.painter = painter;
+            break;
+        } catch(e) {
+            console.log(e);
+        }
+    }
+    if(!this.painter) {
+        alert("Failed to create WebGL and Canvas context");
+        return false;
+    }
 
+    var app = this;
     this.canvas.onmousemove = function(evt) {
         app.last_mouse_canvas_pos = app.rel_pos_from_event(evt);
         app.last_mouse_image_pos = app.painter.unproject(app.last_mouse_canvas_pos);

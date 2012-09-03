@@ -11,8 +11,7 @@
 */
 var FRAG_SHADER_8 = 0;
 var FRAG_SHADER_16 = 1;
-var FRAG_SHADER_16_TWO_COMPLEMENTS = 2;
-var FRAG_SHADER_RGB_8 = 3;
+var FRAG_SHADER_RGB_8 = 2;
 
 function ImageSlice(file, texture, rs, ri, alpha) {
     this.file = file;
@@ -371,16 +370,12 @@ GLPainter.prototype.draw_image = function() {
 off = (1 << (15 - 1));
 
 GLPainter.prototype.init = function(canvasid) {
-    try {
-        // Initialize main gl-canvas
-        this.gl = this.canvas.getContext("experimental-webgl");
-        this.gl.viewportWidth = this.canvas.width;
-        this.gl.viewportHeight = this.canvas.height;
 
-    } catch (e) {
-        alert("Failed to initialize GL-context" + e);
-        return;
-    }
+    // Initialize main gl-canvas
+    this.gl = this.canvas.getContext("experimental-webgl");
+    this.gl.viewportWidth = this.canvas.width;
+    this.gl.viewportHeight = this.canvas.height;
+
 
     this.init_shaders();
     this.init_buffers();
@@ -388,10 +383,8 @@ GLPainter.prototype.init = function(canvasid) {
     //this.gl.enable(this.gl.DEPTH_TEST);
 
     if (!this.gl) {
-        alert("Could not initialise WebGL, sorry :-(");
-        return false;
+        throw "No GL-context";
     }
-    return true;
 }
 
 GLPainter.prototype.onresize = function() {
