@@ -22,9 +22,7 @@
     <script type="text/javascript" src="jsdicom-lib/src/qr.js"></script>
 
     <script type="text/javascript" src="js/GLU.js"></script>
-    <script type="text/javascript" src="js/cluts/plain.js"></script>
-    <script type="text/javascript" src="js/cluts/rainbow.js"></script>
-    <script type="text/javascript" src="js/cluts/blackbody.js"></script>
+    <script type="text/javascript" src="js/cluts.js"></script>
     <script type="text/javascript" src="js/app.js"></script>
     <script type="text/javascript" src="js/tools.js"></script>
     <script type="text/javascript" src="js/utilities.js"></script>
@@ -59,6 +57,9 @@
         $("#test-scroll").click(function() {
             testscroll(0, app.files.length);
         });
+        for(clut in cluts) {
+            $("#clut-select optgroup").append($("<option>").val(clut).text(clut));
+        }
 
         $("#slider").slider();
 
@@ -201,9 +202,6 @@
             <div id="test-scroll" class="tool-button">Slide through</div>
             <select id="clut-select">
                 <optgroup label="CLUT">
-                    <option value="Plain">Plain</option>
-                    <option value="Rainbow">Rainbow</option>
-                    <option value="Blackbody">Blackbody</option>
                 </optgroup>
             </select>
             <select id="window-presets">

@@ -41,9 +41,9 @@ function DcmApp(viewareaid) {
     this.curr_file_idx = 0;
     // tools
     this.curr_tool = new WindowLevelTool(this);
-    this.curr_clut_r = plain_red;
-    this.curr_clut_g = plain_green;
-    this.curr_clut_b = plain_blue;
+    this.curr_clut_r = ClutManager.r('Plain');
+    this.curr_clut_g = ClutManager.g('Plain');
+    this.curr_clut_b = ClutManager.b('Plain');
 }
 
 DcmApp.prototype.load_files = function(files)
@@ -114,24 +114,22 @@ DcmApp.prototype.load_arraybuffer = function(abuf, index, file_count) {
         file.imageOrientationColumn = imageOrientation.slice(3,6);
         
         app.organize_file(file);
-        if(index == 0) {
-            app.curr_series_uid = file.SeriesInstanceUID;
-            app.files = app.series[app.curr_series_uid].files;
-            app.draw_image();
-        }
     } else if(file.modality == "US") {
         file.RescaleIntercept = 0;
         file.RescaleSlope = 1;
         app.files[index] = file;
-
         app.organize_file(file);
-        if(index == 0) {
-            app.curr_series_uid = file.SeriesInstanceUID;
-            app.files = app.series[app.curr_series_uid].files;
-            app.draw_image();
-        }
     } else {
+        file.RescaleIntercept = 0;
+        file.RescaleSlope = 1;
+        app.organize_file(file);
         app.files[index] = file;
+    }
+
+    if(index == 0) {
+        app.curr_series_uid = file.SeriesInstanceUID;
+        app.files = app.series[app.curr_series_uid].files;
+        app.draw_image();
     }
     ++app.files_loaded;
     if(app.files_loaded == file_count) {
@@ -327,23 +325,9 @@ DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
 }
 
 DcmApp.prototype.set_clut = function(clutname) {
-    switch(clutname) {
-        case "Plain":
-            this.curr_clut_r = plain_red;
-            this.curr_clut_g = plain_green;
-            this.curr_clut_b = plain_blue;
-            break;
-        case "Rainbow":
-            this.curr_clut_r = rainbow_red;
-            this.curr_clut_g = rainbow_green;
-            this.curr_clut_b = rainbow_blue;
-            break;
-        case "Blackbody":
-            this.curr_clut_r = blackbody_red;
-            this.curr_clut_g = blackbody_green;
-            this.curr_clut_b = blackbody_blue;
-            break;
-    }
+    this.curr_clut_r = ClutManager.r(clutname);
+    this.curr_clut_g = ClutManager.g(clutname);
+    this.curr_clut_b = ClutManager.b(clutname);
     this.draw_image();
 }
 
