@@ -367,7 +367,6 @@ GLPainter.prototype.draw_image = function() {
 
 
 }
-off = (1 << (15 - 1));
 
 GLPainter.prototype.init = function(canvasid) {
 

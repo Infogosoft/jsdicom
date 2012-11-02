@@ -57,8 +57,20 @@
         $("#test-scroll").click(function() {
             testscroll(0, app.files.length);
         });
+        // Setup cluts
         for(clut in cluts) {
             $("#clut-select optgroup").append($("<option>").val(clut).text(clut));
+        }
+
+        // Setup tools
+        for(tool in tools) {
+            var button = $("<div>").addClass("tool-button").text(tool);
+            $("#button-bar-horz").prepend(button);
+            $(button).click(function() {
+                $(this).parent().find("div").removeClass("butt-selected");
+                $(this).addClass("butt-selected");
+                app.activate_tool(tool);
+            });
         }
 
         $("#slider").slider();
@@ -141,22 +153,6 @@
         });
  */
 
-        $("#butt-measure").click(function() {
-            //$(this).parent().find("div").removeClass("butt-selected");
-            //$(this).addClass("butt-selected");
-            //app.activate_measure_tool();
-        });
-
-        $("#butt-windowing").click(function() {
-            $(this).parent().find("div").removeClass("butt-selected");
-            $(this).addClass("butt-selected");
-            app.activate_window_level_tool();
-        });
-        $("#butt-zooming").click(function() {
-            $(this).parent().find("div").removeClass("butt-selected");
-            $(this).addClass("butt-selected");
-            app.activate_zoom_pan();
-        });
         $("#butt-reset").click(function() {
             app.reset_levels();
         });
@@ -209,14 +205,8 @@
                 </optgroup>
             </select>
             <div id="button-bar-horz">
-                <!--<div id="butt-measure" class="tool-button">Measure</div>-->
-                <div id="butt-windowing" class="tool-button butt-selected">Windowing</div>
-                <div id="butt-zooming" class="tool-button">Zoom/Pan</div>
                 <div id="butt-reset" class="tool-button">Reset</div>
             </div>
-            <!--    jj<div id="info" >
-              Density: <div id="density"></div>
-            </div>-->
         </div>
 
         <div class="slider-holder">

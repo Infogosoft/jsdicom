@@ -77,6 +77,7 @@ function MeasureTool(app) {
     this.set_file = function(file) {
         this.file = file;
     }
+    return this;
 }
 
 function WindowLevelTool(app) {
@@ -117,6 +118,7 @@ function WindowLevelTool(app) {
 
     this.set_file = function(file) {
     }
+    return this;
 }
 
 function ZoomPanTool(app) {
@@ -164,4 +166,10 @@ function ZoomPanTool(app) {
 
     this.set_file = function(file) {
     }
+    return this;
+}
+
+tools = {
+    'Windowing': WindowLevelTool,
+    'Zoom/Pan': ZoomPanTool,
 }

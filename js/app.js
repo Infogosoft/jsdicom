@@ -267,25 +267,14 @@ DcmApp.prototype.draw_image = function() {
     this.painter.draw_image();
 }
 
-
 DcmApp.prototype.fill_metadata_table = function() {
     if(this.files.length == 0)
         return;
     fill_metadata_table(this.files[this.curr_file_idx]);
 }
 
-DcmApp.prototype.activate_measure_tool = function() { 
-    this.curr_tool = new MeasureTool(this);
-    this.curr_tool.set_file(this.files[this.curr_file_idx]);
-}
-
-DcmApp.prototype.activate_window_level_tool = function() { 
-    this.curr_tool = new WindowLevelTool(this);
-    this.curr_tool.set_file(this.files[this.curr_file_idx]);
-}
-
-DcmApp.prototype.activate_zoom_pan = function() { 
-    this.curr_tool = new ZoomPanTool(this);
+DcmApp.prototype.activate_tool = function(tool_identifier) { 
+    this.curr_tool = new tools[tool_identifier](this);
     this.curr_tool.set_file(this.files[this.curr_file_idx]);
 }
 
