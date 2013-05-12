@@ -14,3 +14,11 @@ function instance_number_sort(filelist) {
         return a.InstanceNumber - b.InstanceNumber;
     });
 }
+
+function min_max_voi(file) {
+    var min = Math.min.apply(this, file.PixelData);
+    var max = Math.max.apply(this, file.PixelData);
+    var center = min + (max-min)/2;
+    var level = max-min;
+    return [center, level];
+}

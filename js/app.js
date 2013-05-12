@@ -184,6 +184,7 @@ DcmApp.prototype.setup_series_selection = function() {
 }
 
 DcmApp.prototype.set_series = function(series_uid) {
+    console.log("set_series");
     this.files = this.series[series_uid].files;
     var ww;
     var wl;
@@ -197,7 +198,7 @@ DcmApp.prototype.set_series = function(series_uid) {
         if(ww.constructor == Array) {
             ww = ww[0];
         }
-    } else if(this.files[0].RescaleSlope !== 0) {
+    } else if(this.files[0].RescaleSlope !== undefined) {
         // TODO check the actual datatype instead of using 65536...
         maxval = this.files[0].RescaleSlope * 65536 +
             this.files[0].RescaleIntercept;
@@ -205,8 +206,13 @@ DcmApp.prototype.set_series = function(series_uid) {
         ww = maxval-minval;
         wl = (maxval+minval)/2;
     } else {
-        ww = 65536.0;
-        wl = 32768.0;
+        // Min-max VOI
+        var windowing = min_max_voi(this.files[0]);
+        wl = windowing[0];
+        ww = windowing[1];
+        if(this.files[0].PixelRepresentation == 0x01) {
+            wl -= (0x01 << this.files[0].HighBit);
+        }
     }
     this.curr_file_idx = 0;
     this.set_windowing(wl, ww);
