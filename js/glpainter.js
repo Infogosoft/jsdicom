@@ -53,13 +53,13 @@ GLPainter.prototype.fuse_files = function(file1, file2, alpha) {
     this.images.length = 0;
     this.images.push(new ImageSlice(file1,
                                     this.file_to_texture(file2),
-                                    file2.RescaleSlope,
-                                    file2.RescaleIntercept,
+                                    file2.RescaleSlope || 1.0,
+                                    file2.RescaleIntercept || 0.0,
                                     1.0));
     this.images.push(new ImageSlice(file2,
                                     this.file_to_texture(file1),
-                                    file1.RescaleSlope,
-                                    file1.RescaleIntercept,
+                                    file1.RescaleSlope || 1.0,
+                                    file1.RescaleIntercept || 0.0,
                                     alpha));
     this.rows = file1.Rows;
     this.columns = file1.Columns;
@@ -68,8 +68,8 @@ GLPainter.prototype.fuse_files = function(file1, file2, alpha) {
 GLPainter.prototype.set_file = function(dcmfile) {
     this.images = [new ImageSlice(dcmfile,
                                   this.file_to_texture(dcmfile), 
-                                  dcmfile.RescaleSlope, 
-                                  dcmfile.RescaleIntercept,
+                                  dcmfile.RescaleSlope || 1.0, 
+                                  dcmfile.RescaleIntercept || 0.0,
                                   1.0)];
     this.rows = dcmfile.Rows;
     this.columns = dcmfile.Columns;
@@ -88,13 +88,11 @@ GLPainter.prototype.file_to_texture = function(dcmfile) {
         } else {
             internalFormat = this.gl.LUMINANCE_ALPHA;
             if(dcmfile.PixelRepresentation == 0x01) {
-                if(!dcmfile.PixelRepresentationPatched) {
-                    //var view16bit = new Uint16Array(dcmfile.PixelData.data.buffer, dcmfile.PixelData.data.byteOffset, dcmfile.PixelData.length/2);
-                    console.log("Patching");
+                if(!dcmfile._TwoCompPatched) {
                     for(var i=0;i<dcmfile.PixelData.length;++i) {
-                        dcmfile.PixelData[i] = dcmfile.PixelData[i] ^ 0x8000;
+                        dcmfile.PixelData[i] = dcmfile.PixelData[i] ^ (0x1 << dcmfile.HighBit);
                     }
-                    dcmfile.PixelRepresentationPatched = true;
+                    dcmfile._TwoCompPatched = true;
                 }
             }
         }
@@ -455,7 +453,7 @@ GLPainter.prototype.set_window_uniforms = function(shaderProgram, image) {
     // Hack for files with pixel representation in two complements
     var wl = this.wl;
     if(image.file.PixelRepresentation == 0x01)
-        wl += 32768.0;
+        wl += parseFloat(0x1 << this.images[0].file.HighBit)
     this.gl.uniform1f(shaderProgram.wlUniform, wl);
     this.gl.uniform1f(shaderProgram.wwUniform, this.ww);
     this.gl.uniform1f(shaderProgram.rsUniform, image.rs);
