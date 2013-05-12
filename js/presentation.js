@@ -42,7 +42,7 @@ function fill_series_selection(series, selected_uid, painter_factory) {
         series_list.append(item);
         var painter = painter_factory(thumb_canvas.id);
         painter.init(thumb_canvas.id);
-        painter.set_cluts(plain_red, plain_green, plain_blue);
+        painter.set_cluts(ClutManager.r('Plain'), ClutManager.g('Plain'), ClutManager.b('Plain'));
         painter.set_file(series[uid].files[0]);
         painter.set_windowing(40, 200);
         painter.draw_image();
@@ -102,9 +102,9 @@ function draw_thumbnail_to_canvas(file, ctx, size) {
 
             var canvas_idx = (col/step + (row/step)*size)*4;
             var rounded_intensity = Math.round(intensity);
-            imageData.data[canvas_idx] = plain_red[rounded_intensity];
-            imageData.data[canvas_idx+1] = plain_green[rounded_intensity];
-            imageData.data[canvas_idx+2] = plain_blue[rounded_intensity];
+            imageData.data[canvas_idx] = ClutManager.r('Plain')[rounded_intensity];
+            imageData.data[canvas_idx+1] = ClutManager.g('Plain')[rounded_intensity];
+            imageData.data[canvas_idx+2] = ClutManager.b('Plain')[rounded_intensity];
             imageData.data[canvas_idx+3] = 0xFF;
         }
     }
