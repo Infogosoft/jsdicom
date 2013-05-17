@@ -20,11 +20,6 @@
 function MeasureTool(app) {
     this.in_motion = false;
     this.app = app;
-    this.file;
-    this.startX;
-    this.startY;
-    this.currX;
-    this.currY;
 
     this.click = function(canvas_pos, image_pos) {
         x = canvas_pos[0]; y = canvas_pos[1];
@@ -171,5 +166,5 @@ function ZoomPanTool(app) {
 
 tools = {
     'Windowing': WindowLevelTool,
-    'Zoom/Pan': ZoomPanTool,
-}
+    'Zoom/Pan': ZoomPanTool
+};

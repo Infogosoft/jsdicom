@@ -23,20 +23,10 @@ function ImageSlice(file, texture, rs, ri, alpha) {
 
 function GLPainter(canvasid) {
     this.canvas = document.getElementById(canvasid);
-    this.gl;
-    this.shaderProgram;
     this.mvMatrix = mat4.create();
     this.pMatrix = mat4.create();
-    this.squareVertexPositionBuffer;
-    this.vertexIndexBuffer;
-    //this.THE_TEXTURE;
-    this.CLUT_TEXTURE;
-
     this.ww = 200;
     this.wl = 40;
-    this.clut_r;
-    this.clut_g;
-    this.clut_b;
     this.ztrans = -1;
     this.xtrans = 0.0;
     this.ytrans = 0.0;
@@ -79,7 +69,7 @@ GLPainter.prototype.set_file = function(dcmfile) {
 GLPainter.prototype.file_to_texture = function(dcmfile) {
     var internalFormat;
     raw_data = dcmfile.get_element(dcmdict.PixelData).data;
-    switch(jQuery.trim(dcmfile.PhotometricInterpretation)) {
+    switch(dcmfile.PhotometricInterpretation.trim()) {
     case "MONOCHROME1":
         // TODO: MONOCHROME1 should use inverse cluts.
     case "MONOCHROME2":
@@ -317,7 +307,7 @@ GLPainter.prototype.draw_image = function() {
         }
 
         var shaderProgram;
-        switch(jQuery.trim(image.file.PhotometricInterpretation)) {
+        switch(image.file.PhotometricInterpretation.trim()) {
             case "MONOCHROME1":
                 // TODO: MONOCHROME1 should use inverse cluts.
             case "MONOCHROME2":

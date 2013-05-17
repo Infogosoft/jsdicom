@@ -12,9 +12,6 @@
 function CanvasPainter(canvasid) {
     this.canvas = document.getElementById(canvasid);
     this.tempcanvas = document.createElement("canvas");
-    this.ww;
-    this.wl;
-    this.file;
     this.scale = 1;
     this.pan = [0,0];
 }

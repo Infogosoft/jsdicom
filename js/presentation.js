@@ -151,5 +151,6 @@ function create_image_infobox(viewarea) {
         infolist.appendChild(li);
     }
     infodiv.appendChild(infolist);
-    viewarea.appendChild(infodiv);
+    var canvas = viewarea.querySelector('canvas');
+    viewarea.insertBefore(infodiv, canvas);
 }

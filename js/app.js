@@ -10,25 +10,14 @@
 * You should have received a copy of the GNU General Public License along with jsdicom. If not, see http://www.gnu.org/licenses/.
 */
 var timer_event;
-function log(s)
-{
-    var logEntry = $("<li>").html(s);
-    $("#loglist").append(logEntry);
-}
 
-function log_element(elem_repr) {
-    this.i = 0;
-    this.i++;
-    var elem_div = $("<div>").html(elem_repr);
-    if(this.i % 2 == 0)
-        elem_div.addClass("even");            
-    $("#dicomheader").append(elem_div);
-}
-
-
-function DcmApp(viewareaid) {
+function DcmApp(viewareaid, config) {
     this.viewareaid = viewareaid;
-    this.painter;
+
+    this.onImageCountUpdate = config.onImageCountUpdate;
+    this.onSerieSelectionAdd = config.onSerieSelectionAdd;
+    this.onSerieSelected = config.onSerieSelected;
+    this.onLoadingProgress = config.onLoadingProgress;
 
     this.last_mouse_canvas_pos = [NaN,NaN];
     this.last_mouse_image_pos = [NaN,NaN];
@@ -39,11 +28,25 @@ function DcmApp(viewareaid) {
     this.files = []; // points to files-array in current series
     this.files_loaded = 0;
     this.curr_file_idx = 0;
-    // tools
     this.curr_tool = new WindowLevelTool(this);
-    this.curr_clut_r = ClutManager.r('Plain');
-    this.curr_clut_g = ClutManager.g('Plain');
-    this.curr_clut_b = ClutManager.b('Plain');
+
+    if(config.clut) {
+        this.curr_clut_r = ClutManager.r(config.clut);
+        this.curr_clut_g = ClutManager.g(config.clut);
+        this.curr_clut_b = ClutManager.b(config.clut);
+    } else {
+        this.curr_clut_r = ClutManager.r('Plain');
+        this.curr_clut_g = ClutManager.g('Plain');
+        this.curr_clut_b = ClutManager.b('Plain');
+    }
+    this.init();
+
+    if(config.fileSrc) {
+        this.load_url(config.fileSrc);
+    } else if(config.filesSrc) {
+        this.load_urllist_from_url(config.filesSrc);
+    }
+
 }
 
 DcmApp.prototype.load_files = function(files)
@@ -56,6 +59,7 @@ DcmApp.prototype.load_files = function(files)
     for(var i=0;i<files.length;++i) {
         this.load_file(files[i], i, files.length);
     }
+    /*
     $("#slider").slider({
         value: 0,
         max: files.length-1,
@@ -64,7 +68,7 @@ DcmApp.prototype.load_files = function(files)
             app.curr_tool.set_file(app.files[app.curr_file_idx]);
             app.draw_image();
         }
-    });
+    });*/
 }
 
 DcmApp.prototype.load_urllist_from_url = function(url)
@@ -84,7 +88,7 @@ DcmApp.prototype.load_urllist_from_url = function(url)
     });
 
     for(var i=0;i<files.length;++i) {
-        this.load_url(files[i].href, i, files.length);
+        this._load_url(files[i].href, i, files.length);
     }
 
     $("#slider").slider({
@@ -133,8 +137,12 @@ DcmApp.prototype.load_arraybuffer = function(abuf, index, file_count) {
     }
     ++app.files_loaded;
     if(app.files_loaded == file_count) {
+        if(app.onLoadingComplete) {
+            app.onLoadingComplete();
+        }
+        app.draw_image();
         // All files are loaded
-        app.setup_series_selection();
+        //app.setup_series_selection();
     }
 }
 
@@ -151,7 +159,7 @@ DcmApp.prototype.load_file = function(file, index, file_count) {
     reader.readAsArrayBuffer(file);
 }
 
-DcmApp.prototype.load_url = function(url, index, file_count) {
+DcmApp.prototype._load_url = function(url, index, file_count) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.responseType = 'arraybuffer';
@@ -164,6 +172,24 @@ DcmApp.prototype.load_url = function(url, index, file_count) {
     })(this);
     xhr.send();
 }
+
+DcmApp.prototype.load_url = function(url) {
+    this.curr_file_idx = 0;
+    this.files_loaded = 0;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.responseType = 'arraybuffer';
+
+    // Closure to bind app, 'this' will be reader
+    xhr.onload = (function(app) {
+        return function(evt) {
+            return app.load_arraybuffer(evt.target.response, 0, 1);
+        }
+    })(this);
+    xhr.send();
+}
+
 
 DcmApp.prototype.organize_file = function(file) {
     var series_uid = file.SeriesInstanceUID;
@@ -184,7 +210,6 @@ DcmApp.prototype.setup_series_selection = function() {
 }
 
 DcmApp.prototype.set_series = function(series_uid) {
-    console.log("set_series");
     this.files = this.series[series_uid].files;
     var ww;
     var wl;
@@ -262,12 +287,12 @@ DcmApp.prototype.draw_image = function() {
     var curr_file = this.files[this.curr_file_idx];
     if(curr_file == undefined)
         return;
-    $("#size_info").text(curr_file.Rows + "x" + curr_file.Columns);
-    $("#sliceidx_info").text(this.curr_file_idx+1 + "/" + this.files.length);
-    $("#slider").slider("option", "value", this.curr_file_idx);
+    document.getElementById("size_info").innerText = curr_file.Rows + "x" + curr_file.Columns;
+    document.getElementById("sliceidx_info").innerText = this.curr_file_idx+1 + "/" + this.files.length;
+    //document.getElementById("#slider").innerSlider = "option", "value", this.curr_file_idx;
     var windowing = this.painter.get_windowing();
-    $("#ww_info").text(windowing[1]);
-    $("#wl_info").text(windowing[0]);
+    document.getElementById("ww_info").innerText = windowing[1];
+    document.getElementById("wl_info").innerText = windowing[0];
     this.painter.set_file(curr_file);
     this.painter.set_cluts(this.curr_clut_r, this.curr_clut_g, this.curr_clut_b);
     this.painter.draw_image();
@@ -308,14 +333,14 @@ DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
     var coord = curr_file.getPatientCoordinate(row,col);
     var ctval = curr_file.getCTValue(row, col);
     if (ctval == undefined) {
-        $("#density").html("");
+        document.getElementById("density_info").innerHTML= "";
         return;
     }
     
     if (coord != undefined) {
-        $("#density_info").html("value(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1));
+        document.getElementById("density_info").innerHTML= "value(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1);
     } else {
-        $("#density_info").html("r,c = (" + row + ", " + col + "), val = " + ctval);
+        document.getElementById("density_info").innerHTML = "r,c = (" + row + ", " + col + "), val = " + ctval;
     }
 }
 
@@ -347,8 +372,8 @@ DcmApp.prototype.set_window_preset = function(value) {
 
 DcmApp.prototype.rel_pos_from_event = function(evt) {
     var rel_pos = [-1, -1];
-    rel_pos[0] = Math.floor(evt.pageX - $(this.canvas).offset().left);
-    rel_pos[1] = Math.floor(evt.pageY - $(this.canvas).offset().top);
+    rel_pos[0] = Math.floor(evt.pageX - this.canvas.offsetLeft);
+    rel_pos[1] = Math.floor(evt.pageY - this.canvas.offsetTop);
     return rel_pos;
 }
 
@@ -372,7 +397,7 @@ DcmApp.prototype.init = function() {
 
     var painters = [
         function(cid) { return new GLPainter(cid); },
-        function(cid) { return new CanvasPainter(cid); },
+        function(cid) { return new CanvasPainter(cid); }
     ];
     for(var i in painters) {
         var painter = painters[i](this.canvas.id);
