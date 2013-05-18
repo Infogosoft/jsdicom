@@ -78,28 +78,21 @@ DcmApp.prototype.load_urllist_from_url = function(url)
     this.files_loaded = 0;
     var files = [];
 
-    $.ajax({
-        async: false,
-        dataType: "json",
-        url: url,
-        success: function(r){
-            files = r;
-        }
-    });
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    //xhr.responseType = 'arraybuffer';
 
-    for(var i=0;i<files.length;++i) {
-        this._load_url(files[i].href, i, files.length);
+    // Closure to bind app, 'this' will be reader
+    xhr.onload = function(evt) {
+        var resp = JSON.parse(evt.target.response);
+        for(var i=0; i<resp.files.length;++i) {
+            app._load_url(resp.files[i].href, i, resp.files.length);
+        }
+        if(app.onImageCountUpdate)
+            app.onImageCountUpdate(resp.files.length);
+
     }
-
-    $("#slider").slider({
-        value: 0,
-        max: files.length-1,
-        slide: function(ui, event) {
-            app.curr_file_idx = event.value; //$(this).slider('value');
-            app.curr_tool.set_file(app.files[app.curr_file_idx]);
-            app.draw_image();
-        }
-    });
+    xhr.send();
 }
 
 DcmApp.prototype.load_arraybuffer = function(abuf, index, file_count) {
