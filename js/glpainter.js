@@ -12,6 +12,118 @@
 var FRAG_SHADER_8 = 0;
 var FRAG_SHADER_16 = 1;
 var FRAG_SHADER_RGB_8 = 2;
+var FRAG_SHADER_16_MC1 = 3;
+var FRAG_SHADER_8_MC1 = 4;
+
+
+// Filter Kernel
+var KERNELS =  {
+    normal: [
+      0.0, 0.0, 0.0,
+      0.0, 1.0, 0.0,
+      0.0, 0.0, 0.0
+    ],
+    smoothen: [
+      0.0225, 0.0511, 0.0225,
+      0.0511, 0.166, 0.0511,
+      0.0225, 0.0511, 0.0225
+    ],
+    gaussianBlur: [
+      0.045, 0.122, 0.045,
+      0.122, 0.332, 0.122,
+      0.045, 0.122, 0.045
+    ],
+    gaussianBlur2: [
+      1.0, 2.0, 1.0,
+      2.0, 4.0, 2.0,
+      1.0, 2.0, 1.0
+    ],
+    gaussianBlur3: [
+      0.0, 1.0, 0.0,
+      1.0, 1.0, 1.0,
+      0.0, 1.0, 0.0
+    ],
+    unsharpen: [
+      -1.0, -1.0, -1.0,
+      -1.0,  9.0, -1.0,
+      -1.0, -1.0, -1.0
+    ],
+    sharpness: [
+       0.0,-1.0, 0.0,
+      -1.0, 5.0,-1.0,
+       0.0,-1.0, 0.0
+    ],
+    sharpen: [
+       -1.0, -1.0, -1.0,
+       -1.0, 16.0, -1.0,
+       -1.0, -1.0, -1.0
+    ],
+    edgeDetect: [
+       -0.125, -0.125, -0.125,
+       -0.125,  1.0,     -0.125,
+       -0.125, -0.125, -0.125
+    ],
+    edgeDetect2: [
+       -1.0, -1.0, -1.0,
+       -1.0,  8.0, -1.0,
+       -1.0, -1.0, -1.0
+    ],
+    edgeDetect3: [
+       -5.0, 0.0, 0.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 5.0
+    ],
+    edgeDetect4: [
+       -1.0, -1.0, -1.0,
+        0.0,  0.0,  0.0,
+        1.0,  1.0,  1.0
+    ],
+    edgeDetect5: [
+       -1, -1, -1,
+        2,  2,  2,
+       -1, -1, -1
+    ],
+    edgeDetect6: [
+       -5, -5, -5,
+       -5, 39, -5,
+       -5, -5, -5
+    ],
+    sobelHorizontal: [
+        1,  2,  1,
+        0,  0,  0,
+       -1, -2, -1
+    ],
+    sobelVertical: [
+        1,  0, -1,
+        2,  0, -2,
+        1,  0, -1
+    ],
+    previtHorizontal: [
+        1,  1,  1,
+        0,  0,  0,
+       -1, -1, -1
+    ],
+    previtVertical: [
+        1,  0, -1,
+        1,  0, -1,
+        1,  0, -1
+    ],
+    boxBlur: [
+        0.111, 0.111, 0.111,
+        0.111, 0.111, 0.111,
+        0.111, 0.111, 0.111
+    ],
+    triangleBlur: [
+        0.0625, 0.125, 0.0625,
+        0.125,  0.25,  0.125,
+        0.0625, 0.125, 0.0625
+    ],
+    emboss: [
+       -2, -1,  0,
+       -1,  1,  1,
+        0,  1,  2
+    ]
+ };
 
 function ImageSlice(file, texture, rs, ri, alpha) {
     this.file = file;
@@ -32,8 +144,10 @@ function GLPainter(canvasid) {
     //this.THE_TEXTURE;
     this.CLUT_TEXTURE;
 
-    this.ww = 200;
-    this.wl = 40;
+    //this.ww = 200;
+    //this.wl = 40;
+    this.ww = 4096;
+    this.wl = 2047;
     this.clut_r;
     this.clut_g;
     this.clut_b;
@@ -47,6 +161,10 @@ function GLPainter(canvasid) {
     this.images = [];
     this.shaderPrograms = {};
     this.clut_bar_enabled = false;
+
+		this.br = 0; // brightness
+		this.c = 1000; // contrast
+		this.kernel = "normal";
 }
 
 GLPainter.prototype.fuse_files = function(file1, file2, alpha) {
@@ -67,8 +185,8 @@ GLPainter.prototype.fuse_files = function(file1, file2, alpha) {
 
 GLPainter.prototype.set_file = function(dcmfile) {
     this.images = [new ImageSlice(dcmfile,
-                                  this.file_to_texture(dcmfile), 
-                                  dcmfile.RescaleSlope || 1.0, 
+                                  this.file_to_texture(dcmfile),
+                                  dcmfile.RescaleSlope || 1.0,
                                   dcmfile.RescaleIntercept || 0.0,
                                   1.0)];
     this.rows = dcmfile.Rows;
@@ -105,14 +223,14 @@ GLPainter.prototype.file_to_texture = function(dcmfile) {
         return;
     }
 
-    var texture = this.gl.createTexture(); 
-    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);  
+    var texture = this.gl.createTexture();
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
     this.gl.texImage2D(this.gl.TEXTURE_2D,       // target
                        0,                        // level
                        internalFormat,           // internalformat
                        dcmfile.Columns,          // width
-                       dcmfile.Rows,             // height 
+                       dcmfile.Rows,             // height
                        0,                        // border
                        internalFormat,           // format
                        this.gl.UNSIGNED_BYTE,    // type
@@ -121,7 +239,7 @@ GLPainter.prototype.file_to_texture = function(dcmfile) {
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-                  
+
     this.gl.bindTexture(this.gl.TEXTURE_2D, null);
     return texture;
 }
@@ -156,8 +274,16 @@ GLPainter.prototype.reset_pan = function() {
 }
 
 GLPainter.prototype.reset_windowing = function() {
-    this.ww = 200;
-    this.wl = 40;
+    //this.ww = 200;
+    //this.wl = 40;
+		// @XXX: following values worked better for me
+		this.ww = 4096;
+		this.wl = 2047;
+}
+
+GLPainter.prototype.reset_bc = function() {
+	this.br = 0;
+	this.c = 1000;
 }
 
 GLPainter.prototype.set_cluts = function(clut_r, clut_g, clut_b) {
@@ -182,7 +308,7 @@ GLPainter.prototype.set_cluts = function(clut_r, clut_g, clut_b) {
                        0,                        // level
                        this.gl.RGB,              // internalformat
                        256,                      // width
-                       1,                        // height 
+                       1,                        // height
                        0,                        // border
                        this.gl.RGB,             // format
                        this.gl.UNSIGNED_BYTE,    // type
@@ -203,14 +329,29 @@ GLPainter.prototype.get_windowing = function() {
     return [this.wl, this.ww];
 }
 
+GLPainter.prototype.set_brightness = function(br) {
+    this.br = br;
+    this.draw_image();
+}
+
+GLPainter.prototype.set_contrast = function(c) {
+    this.c = c;
+    this.draw_image();
+}
+
+GLPainter.prototype.set_kernel = function(kernel) {
+    this.kernel = kernel;
+    this.draw_image();
+}
+
 GLPainter.prototype.unproject = function(canvas_pos) {
     var viewportArray = [
         0, 0, this.gl.viewportWidth, this.gl.viewportHeight
     ];
-    
+
     var projectedPoint = [];
     var unprojectedPoint = [];
-    
+
     var flippedmvMatrix = mat4.create();
 
     mat4.identity(flippedmvMatrix);
@@ -227,7 +368,7 @@ GLPainter.prototype.unproject = function(canvas_pos) {
         0,0,0,
         flippedmvMatrix, this.pMatrix,
         viewportArray, projectedPoint);
-    
+
     var successFar = GLU.unProject(
         canvas_pos[0], canvas_pos[1], projectedPoint[2], //windowPointX, windowPointY, windowPointZ,
         flippedmvMatrix, this.pMatrix,
@@ -262,7 +403,8 @@ GLPainter.prototype.draw_clut_bar = function() {
     if(!this.clut_bar_enabled)
         return;
     // Draw clut bar
-    this.gl.viewport(10, 10, 50, this.canvas.height-100);
+    //this.gl.viewport(10, 10, 50, this.canvas.height-100);
+		this.gl.viewport(this.canvas.width-60, 10, 50, this.canvas.height-100);
     var pMatrix = mat4.create();
     mat4.perspective(this.fovy, this.gl.viewportWidth / this.gl.viewportHeight, 0.1, 100.0, pMatrix);
     var mvMatrix = mat4.create();
@@ -319,7 +461,12 @@ GLPainter.prototype.draw_image = function() {
         var shaderProgram;
         switch(jQuery.trim(image.file.PhotometricInterpretation)) {
             case "MONOCHROME1":
-                // TODO: MONOCHROME1 should use inverse cluts.
+							if(image.file.BitsStored <= 8) {
+									shaderProgram = this.shaderPrograms[FRAG_SHADER_8_MC1];
+							} else {
+									shaderProgram = this.shaderPrograms[FRAG_SHADER_16_MC1];
+							}
+							break;
             case "MONOCHROME2":
                 if(image.file.BitsStored <= 8) {
                     shaderProgram = this.shaderPrograms[FRAG_SHADER_8];
@@ -337,18 +484,18 @@ GLPainter.prototype.draw_image = function() {
         this.gl.useProgram(shaderProgram);
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.squareVertexPositionBuffer);
-        this.gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, 
-                               this.squareVertexPositionBuffer.itemSize, 
-                               this.gl.FLOAT, 
-                               false, 
-                               0, 
+        this.gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute,
+                               this.squareVertexPositionBuffer.itemSize,
+                               this.gl.FLOAT,
+                               false,
+                               0,
                                0);
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
         this.gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, this.textureCoordBuffer.itemSize, this.gl.FLOAT, false, 0, 0);
 
-        this.gl.activeTexture(this.gl.TEXTURE0);  
-        this.gl.bindTexture(this.gl.TEXTURE_2D, image.texture);  
+        this.gl.activeTexture(this.gl.TEXTURE0);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, image.texture);
         this.gl.uniform1i(shaderProgram.samplerUniform, 0);
 
         // Clut texture
@@ -410,10 +557,14 @@ GLPainter.prototype.init_shaders = function() {
     var fragmentShader16 = this.compile_shader(fragment_shader_16, this.gl.FRAGMENT_SHADER);
     var fragmentShaderRGB8 = this.compile_shader(fragment_shader_rgb_8, this.gl.FRAGMENT_SHADER);
     var vertexShader = this.compile_shader(vertex_shader, this.gl.VERTEX_SHADER);
+		var fragmentShader8MC1 = this.compile_shader(fragment_shader_8_mc1, this.gl.FRAGMENT_SHADER);
+		var fragmentShader16MC1 = this.compile_shader(fragment_shader_16_mc1, this.gl.FRAGMENT_SHADER);
 
     this.shaderPrograms[FRAG_SHADER_8] = this.create_shader_program(fragmentShader8, vertexShader);
     this.shaderPrograms[FRAG_SHADER_16] = this.create_shader_program(fragmentShader16, vertexShader);
     this.shaderPrograms[FRAG_SHADER_RGB_8] = this.create_shader_program(fragmentShaderRGB8, vertexShader);
+		this.shaderPrograms[FRAG_SHADER_16_MC1] = this.create_shader_program(fragmentShader16MC1, vertexShader);
+		this.shaderPrograms[FRAG_SHADER_8_MC1] = this.create_shader_program(fragmentShader8MC1, vertexShader);
 }
 
 GLPainter.prototype.create_shader_program = function(fragshader, vertshader) {
@@ -428,8 +579,8 @@ GLPainter.prototype.create_shader_program = function(fragshader, vertshader) {
 
     shaderProgram.vertexPositionAttribute = this.gl.getAttribLocation(shaderProgram, "aVertexPosition");
     this.gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-    shaderProgram.textureCoordAttribute = this.gl.getAttribLocation(shaderProgram, "aTextureCoord");  
-    this.gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute); 
+    shaderProgram.textureCoordAttribute = this.gl.getAttribLocation(shaderProgram, "aTextureCoord");
+    this.gl.enableVertexAttribArray(shaderProgram.textureCoordAttribute);
 
     shaderProgram.pMatrixUniform = this.gl.getUniformLocation(shaderProgram, "uPMatrix");
     shaderProgram.mvMatrixUniform = this.gl.getUniformLocation(shaderProgram, "uMVMatrix");
@@ -441,6 +592,9 @@ GLPainter.prototype.create_shader_program = function(fragshader, vertshader) {
     shaderProgram.riUniform = this.gl.getUniformLocation(shaderProgram, "uRI");
     shaderProgram.rsUniform = this.gl.getUniformLocation(shaderProgram, "uRS");
     shaderProgram.alphaUniform = this.gl.getUniformLocation(shaderProgram, "uAlpha");
+		shaderProgram.brUniform = this.gl.getUniformLocation(shaderProgram, "uBrightness");
+		shaderProgram.cUniform = this.gl.getUniformLocation(shaderProgram, "uContrast");
+		shaderProgram.krUniform = this.gl.getUniformLocation(shaderProgram, "uKernel[0]");
     return shaderProgram;
 }
 
@@ -459,6 +613,10 @@ GLPainter.prototype.set_window_uniforms = function(shaderProgram, image) {
     this.gl.uniform1f(shaderProgram.rsUniform, image.rs);
     this.gl.uniform1f(shaderProgram.riUniform, image.ri);
     this.gl.uniform1f(shaderProgram.alphaUniform, image.alpha);
+		this.gl.uniform1f(shaderProgram.brUniform, this.br);
+		this.gl.uniform1f(shaderProgram.cUniform, this.c);
+		this.gl.uniform1fv(shaderProgram.krUniform, KERNELS[this.kernel]);
+
 }
 
 GLPainter.prototype.init_buffers = function() {
@@ -473,18 +631,18 @@ GLPainter.prototype.init_buffers = function() {
     this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(vertices), this.gl.STATIC_DRAW);
     this.squareVertexPositionBuffer.itemSize = 3;
     this.squareVertexPositionBuffer.numItems = 4;
- 
+
     // Texture coords
-    this.textureCoordBuffer = this.gl.createBuffer();  
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);  
-    
-    var textureCoordinates = [  
-        0.0,  0.0,  
-        1.0,  0.0,  
-        1.0,  1.0,  
+    this.textureCoordBuffer = this.gl.createBuffer();
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.textureCoordBuffer);
+
+    var textureCoordinates = [
+        0.0,  0.0,
+        1.0,  0.0,
+        1.0,  1.0,
         0.0,  1.0
-    ];  
-    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),  
+    ];
+    this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),
                   this.gl.STATIC_DRAW);
     this.textureCoordBuffer.itemSize = 2;
     this.textureCoordBuffer.numItems = 4;
@@ -492,7 +650,7 @@ GLPainter.prototype.init_buffers = function() {
     this.vertexIndexBuffer = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.vertexIndexBuffer);
     var vertexIndices = [
-        0, 1, 2, 0, 2, 3    
+        0, 1, 2, 0, 2, 3
     ];
     this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexIndices), this.gl.STATIC_DRAW);
     this.vertexIndexBuffer.itemSize = 1;

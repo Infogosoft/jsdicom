@@ -35,8 +35,10 @@ CanvasPainter.prototype.set_windowing = function(wl, ww) {
 }
 
 CanvasPainter.prototype.reset_windowing = function() {
-    this.ww = 200;
-    this.wl = 40;
+    //this.ww = 200;
+    //this.wl = 40;
+    this.ww = 4096;
+    this.wl = 2047;
 }
 
 CanvasPainter.prototype.set_scale = function(scale) {
@@ -114,7 +116,14 @@ CanvasPainter.prototype.draw_image = function() {
     var tempctx = this.tempcanvas.getContext("2d");
 
     var imageData = tempctx.createImageData(this.file.Columns, this.file.Rows);
-    
+
+		// @XXX: invert MONOCHROME1
+		var invert = false;
+    if(jQuery.trim(this.file.PhotometricInterpretation) == "MONOCHROME1")
+		{
+			invert = true;
+		}
+
     var lower_bound = this.wl - this.ww/2.0;
     var upper_bound = this.wl + this.ww/2.0;
     for(var row=0;row<this.file.Rows;++row) {
@@ -127,6 +136,11 @@ CanvasPainter.prototype.draw_image = function() {
                 intensity = 0.0;
             if(intensity > 1.0)
                 intensity = 1.0;
+
+						// @XXX: invert MONOCHROME1
+						if (invert){
+							intensity = 1 - intensity;
+						}
 
             intensity *= 255.0;
 
