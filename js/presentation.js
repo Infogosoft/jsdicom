@@ -10,7 +10,6 @@
 * You should have received a copy of the GNU General Public License along with jsdicom. If not, see http://www.gnu.org/licenses/.
 */
 // Maybe use some cool js-templating, like mustasche?
-
 function fill_series_selection(series, selected_uid, painter_factory) {
     var series_list = $("#series-selection");
     series_list.empty();
@@ -29,8 +28,8 @@ function fill_series_selection(series, selected_uid, painter_factory) {
         if(uid == selected_uid) {
             item.addClass('series-selected');
         }
-        //draw_thumbnail_to_canvas(series[uid].files[0], 
-        //                         thumb_canvas.getContext('2d'), 
+        //draw_thumbnail_to_canvas(series[uid].files[0],
+        //                         thumb_canvas.getContext('2d'),
         //                         size);
         item.click((function(u) {
             return function() {
@@ -44,7 +43,8 @@ function fill_series_selection(series, selected_uid, painter_factory) {
         painter.init(thumb_canvas.id);
         painter.set_cluts(ClutManager.r('Plain'), ClutManager.g('Plain'), ClutManager.b('Plain'));
         painter.set_file(series[uid].files[0]);
-        painter.set_windowing(40, 200);
+        //painter.set_windowing(40, 200);
+        painter.set_windowing(2047, 4096);
         painter.draw_image();
     }
 }
@@ -74,14 +74,16 @@ function fill_metadata_table(file) {
 function draw_thumbnail_to_canvas(file, ctx, size) {
     var imageData = ctx.createImageData(size, size);
     // use ww/wl from file
-    var wl = 500;
-    var ww = 1000;
-    if(file.get_element(0x00281050) !== 0) {
-        wl = file.get_element(0x00281050).get_value();
-        wl = (wl.constructor == Array) ? wl[0] : wl;
-        ww = file.get_element(0x00281051).get_value();
-        ww = (ww.constructor == Array) ? ww[0] : ww;
-    }
+    //var wl = 500;
+    //var ww = 1000;
+    //if(file.get_element(0x00281050) !== 0) {
+    //    wl = file.get_element(0x00281050).get_value();
+    //    wl = (wl.constructor == Array) ? wl[0] : wl;
+    //    ww = file.get_element(0x00281051).get_value();
+    //    ww = (ww.constructor == Array) ? ww[0] : ww;
+    //}
+    var wl = 2047;
+    var ww = 4096;
     var step = file.columns / size;
 
     for(var row=0;row<file.Rows;row+=step) {
@@ -123,7 +125,20 @@ function create_image_infobox(viewarea) {
     infolist.style.paddingLeft = "7px";
 
     // Create list item and two p-tags for each property
-    var attrs = [['size', 'Size'], ['ww', 'WW'], ['wl', 'WL'], ['sliceidx', 'Slice'], ['density', 'Density']];
+    //var attrs = [['size', 'Size'], ['ww', 'WW'], ['wl', 'WL'], ['sliceidx', 'Slice'], ['density', 'Density']];
+    var attrs = [
+			['patname', 'PatientsName'],
+			['patdob', 'PatientsBirthDate'],
+			['patid', 'PatientID'],
+			['bodypart', 'BodyPartExamined'],
+			['size', 'Size'],
+			['ww', 'WW'],
+			['wl', 'WL'],
+			['sliceidx', 'Slice'],
+			['density', 'Density'],
+			['length', 'Length'],
+			['angle', 'Angle']
+		];
     for(var idx in attrs) {
         var li = document.createElement('li');
         li.style.listStyle = 'none';
@@ -132,7 +147,13 @@ function create_image_infobox(viewarea) {
         var plabel = document.createElement('p');
         plabel.style.cssFloat = 'left';
         plabel.innerHTML = attrs[idx][1];
-        plabel.style.width = "50px";
+        //plabel.style.width = "50px";
+				if (attrs[idx][0] != "patname" && attrs[idx][0] != "patdob" && attrs[idx][0] != "patid" && attrs[idx][0] != "bodypart") {
+					plabel.style.width = "50px";
+				}
+				else{
+					plabel.style.width = "130px";
+				}
         plabel.style.padding = "0px";
         plabel.style.margin = "0px";
 

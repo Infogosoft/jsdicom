@@ -4,6 +4,7 @@
 <head>
     <title>DICOM</title>
     <link rel="stylesheet" type="text/css" href="jquery/css/smoothness/jquery-ui-1.8.20.custom.css" />
+		<link rel="stylesheet" href="jquery/css/prettyLoader.css" type="text/css" media="screen" charset="utf-8" />
     <link rel="stylesheet" type="text/css" href="main.css" />
 
     <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
@@ -12,6 +13,7 @@
     <script type="text/javascript" src="js/canvaspainter.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="jquery/js/jquery-ui-1.8.20.custom.min.js"></script>
+		<script type="text/javascript" src="jquery/js/jquery.prettyLoader.js"></script>
 
     <!-- External jsdicom-lib -->
     <script type="text/javascript" src="jsdicom-lib/src/dcmdict.js"></script>
@@ -41,7 +43,7 @@
             return;
         app.curr_file_idx = i;
         app.draw_image();
-        setTimeout((function(a, b) { 
+        setTimeout((function(a, b) {
                     return function() {
                         testscroll(a, b);
                     }})(i+1, len), 0);
@@ -50,6 +52,16 @@
 
 
     $(document).ready(function() {
+				// @XXX: prettyLoader
+				$.prettyLoader({
+						animation_speed: 'fast', /* fast/normal/slow/integer */
+						bind_to_ajax: true, /* true/false */
+						delay: false, /* false OR time in milliseconds (ms) */
+						loader: 'jquery/images/prettyLoader/ajax-loader.gif', /* Path to your loader gif */
+						offset_top: 13, /* integer */
+						offset_left: 10 /* integer */
+				});
+
         app.init();
         $("input[type=file]").change(function(evt) {
             //app.load_files(evt);
@@ -65,15 +77,80 @@
         // Setup tools
         for(tool in tools) {
             var button = $("<div>").addClass("tool-button").text(tool);
+						if (tool == "Brigthness/Contrast") button.css("width", "120px");
             $("#button-bar-horz").prepend(button);
             $(button).click(function() {
                 $(this).parent().find("div").removeClass("butt-selected");
                 $(this).addClass("butt-selected");
-                app.activate_tool(tool);
+                app.activate_tool(this.innerHTML);
             });
         }
 
-        $("#slider").slider();
+        $("#slider_slices").slider();
+
+
+        $("#zoom_slider").slider
+				({
+					range: "min",
+					value: 100,
+					min: 1,
+					max: 1000,
+					slide: function( event, ui ){ app.set_scale(ui.value/100);}
+				});
+
+				$("#w_slider").slider
+				({
+					range: "min",
+					value: 4096,
+					min: 0,
+					max: 10000,
+					slide: function( event, ui )
+					{
+							wl = app.get_windowing();
+							app.set_windowing(wl[0], ui.value, 0);
+							app.draw_image();
+					}
+				});
+
+				$("#l_slider").slider
+				({
+					range: "min",
+					value: 2047,
+					min: 0,
+					max: 5000,
+					slide: function( event, ui )
+					{
+							wl = app.get_windowing();
+							app.set_windowing(ui.value, wl[1], 0);
+							app.draw_image();
+					}
+				});
+
+				$("#b_slider").slider
+				({
+					range: "min",
+					value: 0,
+					min: -192,
+					max: 192,
+					slide: function( event, ui )
+					{
+							app.set_brightness(ui.value);
+							app.draw_image();
+					}
+				});
+
+				$("#c_slider").slider
+				({
+					range: "min",
+					value: 1000,
+					min: 0,
+					max: 2000,
+					slide: function( event, ui )
+					{
+							app.set_contrast(ui.value);
+							app.draw_image();
+					}
+				});
 
         $("button").button();
 
@@ -154,7 +231,8 @@
  */
 
         $("#butt-reset").click(function() {
-            app.reset_levels();
+            //app.reset_levels();
+            app.reset_all();
         });
         $("#clut-select").change(function() {
             app.set_clut($(this).val());
@@ -208,10 +286,47 @@
                 <div id="butt-reset" class="tool-button">Reset</div>
             </div>
         </div>
-
-        <div class="slider-holder">
-            <div id="slider"></div>
+				<div class="slider-holder">
+					<table cellspacing="0" cellpadding="0">
+						<tr>
+							<td class="label"><label for="slider_slices">Slices:</label></td>
+							<td class="slider"><div id="slider_slices"></td>
+						</tr>
+					</table>
         </div>
+				<div id="filter_slider">
+					<div id="z">
+						<table cellspacing="0" cellpadding="0">
+							<tr>
+								<td class="label"><label for="zoom_slider">Zoom:</label></td>
+								<td class="slider"><div id="zoom_slider"></td>
+							</tr>
+						</table>
+					</div>
+					<div id="wl_slider">
+						<table cellspacing="0" cellpadding="0">
+							<tr>
+								<td class="label"><label for="w_slider">Window:</label></td>
+								<td class="slider"><div id="w_slider"></div></td>
+								<td class="label"><label for="l_slider">Level:</label></td>
+								<td class="slider"><div id="l_slider"></div></td>
+							</tr>
+						</table>
+					</div>
+					<div id="bc_slider">
+						<table cellspacing="0" cellpadding="0">
+							<tr>
+								<td class="label"><label for="b_slider">Brightness:</label></td>
+								<td class="slider"><div id="b_slider"></div></td>
+								<td class="label"><label for="c_slider">Contrast:</label></td>
+								<td class="slider"><div id="c_slider"></div></td>
+							</tr>
+						</table>
+<!--						<div style="float: left; width: 50%;"><label for="b_slider">Brightness:</label><div id="b_slider"></div></div>
+						<div style="margin-left: 5px; float: right; width: 48%;"><label for="c_slider">Contrast:</label><div id="c_slider"></div></div>-->
+					</div>
+				</div>
+
         <div id="view-area">
         </div>
     </div>
@@ -228,7 +343,7 @@
       <form>
         PACS:
       	<div id="browse-pacs-radio">
-	</div> 
+	</div>
       </form>
 	<div id="studiesaccordion">
 	</div>

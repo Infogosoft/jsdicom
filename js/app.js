@@ -21,7 +21,7 @@ function log_element(elem_repr) {
     this.i++;
     var elem_div = $("<div>").html(elem_repr);
     if(this.i % 2 == 0)
-        elem_div.addClass("even");            
+        elem_div.addClass("even");
     $("#dicomheader").append(elem_div);
 }
 
@@ -44,6 +44,14 @@ function DcmApp(viewareaid) {
     this.curr_clut_r = ClutManager.r('Plain');
     this.curr_clut_g = ClutManager.g('Plain');
     this.curr_clut_b = ClutManager.b('Plain');
+
+		// @XXX: additional variables
+		this.pixel_spacing = false;
+		this.unit = "mm";
+		this.mlength = 0;
+		this.blured = false;
+		this.sharpen = false;
+		this.angle = 0;
 }
 
 DcmApp.prototype.load_files = function(files)
@@ -56,7 +64,7 @@ DcmApp.prototype.load_files = function(files)
     for(var i=0;i<files.length;++i) {
         this.load_file(files[i], i, files.length);
     }
-    $("#slider").slider({
+    $("#slider_slices").slider({
         value: 0,
         max: files.length-1,
         slide: function(ui, event) {
@@ -112,7 +120,7 @@ DcmApp.prototype.load_arraybuffer = function(abuf, index, file_count) {
         imageOrientation = file.ImageOrientationPatient;
         file.imageOrientationRow = imageOrientation.slice(0,3);
         file.imageOrientationColumn = imageOrientation.slice(3,6);
-        
+
         app.organize_file(file);
     } else if(file.modality == "US") {
         file.RescaleIntercept = 0;
@@ -136,10 +144,49 @@ DcmApp.prototype.load_arraybuffer = function(abuf, index, file_count) {
         // All files are loaded
         app.setup_series_selection();
     }
+		// @XXX: additional Meta-Tags for the Info-View and PixelSpacing fpr measuring
+    for(var key in file.data_elements) {
+        var element = file.data_elements[key];
+        var tag = tag_repr(element.tag);
+        var dictmatch = dcmdict[element.tag];
+        var name = "unknown";
+        if(dictmatch != undefined)
+            var name = dictmatch[1];
+        var value = 'N/A';
+        var val = element.get_repr();
+        if(val != undefined) {
+            var value = val;
+        }
+				if (name == "PixelSpacing"){
+					this.pixel_spacing = value.split("\\");
+				}
+				else if (name == "PatientsName") {
+					$('#patname_info').text(value);
+				}
+				else if (name == "PatientID") {
+					$('#patid_info').text(value);
+				}
+				else if (name == "PatientsBirthDate") {
+					$('#patdob_info').text(value);
+				}
+				else if (name == "BodyPartExamined") {
+					$('#bodypart_info').text(value);
+				}
+		}
+		// fallback, if there is no PixelSpacing defined: show length in px
+		if (!this.pixel_spacing) {
+			this.pixel_spacing = ["1","1"];
+			this.unit = "px";
+		}
+		// @XXX: prettoLoader hides
+		$.prettyLoader.hide();
 }
 
 
 DcmApp.prototype.load_file = function(file, index, file_count) {
+		// @XXX: prettyLoader shows up
+		$.prettyLoader.show();
+
     var reader = new FileReader();
 
     // Closure to bind app, 'this' will be reader
@@ -152,6 +199,9 @@ DcmApp.prototype.load_file = function(file, index, file_count) {
 }
 
 DcmApp.prototype.load_url = function(url, index, file_count) {
+		// @XXX: prettyLoader shows up
+		$.prettyLoader.show();
+
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.responseType = 'arraybuffer';
@@ -184,7 +234,7 @@ DcmApp.prototype.setup_series_selection = function() {
 }
 
 DcmApp.prototype.set_series = function(series_uid) {
-    console.log("set_series");
+    //console.log("set_series");
     this.files = this.series[series_uid].files;
     var ww;
     var wl;
@@ -215,8 +265,9 @@ DcmApp.prototype.set_series = function(series_uid) {
         }
     }
     this.curr_file_idx = 0;
-    this.set_windowing(wl, ww);
-    this.draw_image();
+    //this.set_windowing(wl, ww);
+    //this.draw_image();
+		app.reset_all();
 }
 
 DcmApp.prototype.set_pan = function(panx, pany) {
@@ -245,6 +296,19 @@ DcmApp.prototype.set_windowing = function(wl, ww) {
 
 DcmApp.prototype.get_windowing = function() {
     return this.painter.get_windowing();
+}
+
+DcmApp.prototype.set_brightness = function(br) {
+    return this.painter.set_brightness(br);
+}
+
+DcmApp.prototype.set_contrast = function(c) {
+    return this.painter.set_contrast(c);
+}
+
+DcmApp.prototype.set_kernel = function(value) {
+    this.painter.set_kernel(value);
+		this.draw_image();
 }
 
 DcmApp.prototype.set_slice_idx = function(idx) {
@@ -279,16 +343,70 @@ DcmApp.prototype.fill_metadata_table = function() {
     fill_metadata_table(this.files[this.curr_file_idx]);
 }
 
-DcmApp.prototype.activate_tool = function(tool_identifier) { 
+DcmApp.prototype.activate_tool = function(tool_identifier) {
+    //this.curr_tool = new tools[tool_identifier](this);
+    //this.curr_tool.set_file(this.files[this.curr_file_idx]);
+	if (tool_identifier == "Sharpen")
+	{
+		if (this.sharpen == false)
+		{
+			this.sharpen = true;
+			this.blured = false;
+			this.set_kernel("sharpen")
+		}
+		else
+		{
+			this.sharpen = false;
+			this.blured = false;
+			this.set_kernel("normal");
+		}
+	}
+	if (tool_identifier == "Blur")
+	{
+		if (this.blured == false)
+		{
+			this.blured = true;
+			this.sharpen = false;
+			this.set_kernel("gaussianBlur")
+		}
+		else
+		{
+			this.blured = false;
+			this.sharpen = false;
+			this.set_kernel("normal");
+		}
+	}
+	else
+	{
+		if (typeof this.curr_tool.deactivate == "function")
+		{
+			this.curr_tool.deactivate();
+		}
     this.curr_tool = new tools[tool_identifier](this);
     this.curr_tool.set_file(this.files[this.curr_file_idx]);
+	}
 }
 
-DcmApp.prototype.reset_levels = function() { 
+DcmApp.prototype.reset_levels = function() {
     this.painter.reset_pan();
     this.painter.reset_windowing();
     this.painter.reset_scale();
     this.draw_image();
+}
+
+DcmApp.prototype.reset_all = function() {
+	this.painter.reset_pan();
+	this.painter.reset_scale();
+	this.painter.reset_windowing();
+	this.painter.reset_bc();
+	this.set_kernel("normal");
+	this.macanvas.width = this.macanvas.width;
+	$('#w_slider').slider("option", "value", 4096);
+	$('#l_slider').slider("option", "value", 2047);
+	$('#c_slider').slider("option", "value", 1000);
+	$('#b_slider').slider("option", "value", 0);
+	$('#angle_info').text('0' + ' ' + this.unit);
+	$('#length_info').text('0 ' + unescape("%B0"));
 }
 
 DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
@@ -311,12 +429,16 @@ DcmApp.prototype.mousemoveinfo = function(canvas_pos, image_pos) {
         $("#density").html("");
         return;
     }
-    
+
     if (coord != undefined) {
         $("#density_info").html("value(" + coord.map(function(x) {return x.toFixed(1);}) + ") = " + ctval.toFixed(1));
     } else {
         $("#density_info").html("r,c = (" + row + ", " + col + "), val = " + ctval);
     }
+		// @XXX: angle and measure length
+		$('#length_info').text(this.mlength + " " + this.unit);
+		var angle2 = (this.angle == 0) ? 0 : (360-this.angle);
+		$('#angle_info').text(this.angle + " " + unescape("%B0") + " / " + angle2 + " " + unescape("%B0"));
 }
 
 DcmApp.prototype.set_clut = function(clutname) {
@@ -330,7 +452,7 @@ DcmApp.prototype.refreshmousemoveinfo = function() {
     this.mousemoveinfo(this.last_mouse_canvas_pos, this.last_mouse_image_pos);
 }
 
-DcmApp.prototype.update_window_preset_list = function(wls, wws) { 
+DcmApp.prototype.update_window_preset_list = function(wls, wws) {
     var optgroup = $("#window-presets").find("optgroup")
     optgroup.empty();
     for(var i=0;i<wws.length;++i) {
@@ -339,7 +461,7 @@ DcmApp.prototype.update_window_preset_list = function(wls, wws) {
     }
 }
 
-DcmApp.prototype.set_window_preset = function(value) { 
+DcmApp.prototype.set_window_preset = function(value) {
     var spl = value.split(",");
     this.painter.set_windowing(parseFloat(spl[0]), parseFloat(spl[1]));
     this.draw_image();
@@ -366,7 +488,21 @@ DcmApp.prototype.init = function() {
     this.canvas.width = this.viewarea.clientWidth - 1;
     this.canvas.height = this.viewarea.clientHeight - 1;
     this.canvas.style.border = '1px solid #aaa';
+		this.canvas.style.zIndex = '5';
     this.viewarea.appendChild(this.canvas);
+
+		// @XXX: 2d canvas for measuring and angle calc
+		this.macanvas = document.createElement('canvas');
+    this.macanvas.id = 'macanvas'; // TODO: Unique of use of prefix
+    this.macanvas.width = this.viewarea.clientWidth - 1;
+    this.macanvas.height = this.viewarea.clientHeight - 1;
+    this.macanvas.style.border = '1px solid #aaa';
+		this.macanvas.style.position = 'absolute';
+		this.macanvas.style.top = '0px';
+		this.macanvas.style.left = '0px';
+		this.macanvas.style.zIndex = '10';
+		this.viewarea.appendChild(this.macanvas);
+
     // Create infobox
     create_image_infobox(this.viewarea);
 
@@ -392,7 +528,8 @@ DcmApp.prototype.init = function() {
     }
 
     var app = this;
-    this.canvas.onmousemove = function(evt) {
+		// @XXX: switched eventlisteners from webgl canvas to 2d canvas, which is layered above
+    this.macanvas.onmousemove = function(evt) {
         app.last_mouse_canvas_pos = app.rel_pos_from_event(evt);
         app.last_mouse_image_pos = app.painter.unproject(app.last_mouse_canvas_pos);
         if (app.curr_tool.mousemove !== undefined)
@@ -400,9 +537,9 @@ DcmApp.prototype.init = function() {
         app.refreshmousemoveinfo();
         return false;
     }
-    
 
-    this.canvas.onmousedown = function(evt) {
+
+    this.macanvas.onmousedown = function(evt) {
         if (app.curr_tool.mousedown !== undefined) {
             var canvas_pos = app.rel_pos_from_event(evt);
             image_pos = app.painter.unproject(canvas_pos);
@@ -412,7 +549,7 @@ DcmApp.prototype.init = function() {
         return false;
     }
 
-    this.canvas.onmouseup = function(evt) {
+    this.macanvas.onmouseup = function(evt) {
         if (app.curr_tool.mouseup !== undefined) {
             var canvas_pos = app.rel_pos_from_event(evt);
             image_pos = app.painter.unproject(canvas_pos);
@@ -422,12 +559,12 @@ DcmApp.prototype.init = function() {
         return false;
     }
 
-    this.canvas.onmouseout = function(evt) {
+    this.macanvas.onmouseout = function(evt) {
         app.mouse_down = false;
         return false;
     }
 
-    this.canvas.onclick = function(evt) {
+    this.macanvas.onclick = function(evt) {
         if (app.curr_tool.click !== undefined) {
             var canvas_pos = app.rel_pos_from_event(evt);
             image_pos = app.painter.unproject(canvas_pos);
@@ -446,15 +583,15 @@ DcmApp.prototype.init = function() {
             app.curr_tool.scroll(evt.wheelDeltaY/3);
         return false;
     }
-    
+
     this.canvas.addEventListener('DOMMouseScroll', scrollListener, false);
     this.canvas.addEventListener('mousewheel', wheelListener, false);
 
-    document.getElementById("infobox").onmousemove = this.canvas.onmousemove;
-    document.getElementById("infobox").onmousedown = this.canvas.onmousedown;
-    document.getElementById("infobox").onmouseup = this.canvas.onmouseup;
-    document.getElementById("infobox").onmouseout = this.canvas.onmouseout;
-    document.getElementById("infobox").onclick = this.canvas.onclick;
+    document.getElementById("infobox").onmousemove = this.macanvas.onmousemove;
+    document.getElementById("infobox").onmousedown = this.macanvas.onmousedown;
+    document.getElementById("infobox").onmouseup = this.macanvas.onmouseup;
+    document.getElementById("infobox").onmouseout = this.macanvas.onmouseout;
+    document.getElementById("infobox").onclick = this.macanvas.onclick;
     document.getElementById("infobox").addEventListener('DOMMouseScroll', scrollListener, false);
 
     window.onresize = function(evt) {
@@ -462,9 +599,12 @@ DcmApp.prototype.init = function() {
         clearTimeout(timer_event);
         function resize_canvas() {
             var container = document.getElementById('view-area');
-            var c = document.getElementById('maincanvas');
+						var c = document.getElementById("maincanvas");
+						var ma = document.getElementById('macanvas');
             c.width = container.clientWidth - 1;
             c.height = container.clientHeight - 1;
+            ma.width = container.clientWidth - 1;
+            ma.height = container.clientHeight - 1;
             app.painter.onresize();
         }
         timer_event = setTimeout(resize_canvas, 10);

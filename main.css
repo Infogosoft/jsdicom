@@ -73,7 +73,7 @@ body {
     border-radius: 0px 0px 0px 0px;
 }
 
-.tool-button { 
+.tool-button {
     float:left;
     background: -moz-linear-gradient(top, #ccc 40%, #eee 60%);
     border: 1px solid #aaa;
@@ -88,7 +88,7 @@ body {
     margin-top: 2px;
 }
 
-.tool-button:hover { 
+.tool-button:hover {
     background: #fff;
     cursor: pointer;
 
@@ -98,19 +98,13 @@ body {
     background: #fff;
 }
 
-.slider-holder {
-    margin-bottom: 10px;
-    padding-right: 24px;
-    padding-left: 10px;
-}
-
 td {
     padding:0;
     margin:0;
 }
 #viewer-bar {
-    height: 25px;
-    margin-bottom: 10px;
+	width: 100%;
+	padding-bottom: 10px;
 }
 
 #viewer-bar >select {
@@ -200,7 +194,7 @@ tr.even {
     bottom: 10px;
     left: 10px;
     right: 10px;
-    top: 70px;
+    top: 115px;
 }
 
 .box h2 {
@@ -218,4 +212,36 @@ tr.even {
     padding: 3px 13px;
     position: relative;
     text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.7);
+}
+
+.slider-holder{
+		margin-top: 30px;
+		padding: 0px 5px;
+}
+
+.slider-holder table{
+	width: 80%;
+}
+
+.slider-holder table td.slider{
+	width: 93%;
+}
+
+table td.label{
+	width: 50px;
+}
+div#filter_slider{
+	padding: 5px 5px 10px 5px;
+}
+div#filter_slider table td.slider{
+	width: 350px;
+	padding: 0px 5px 0px 15px;
+}
+
+div#filter_slider table td, div.slider-holder table td{
+	padding: 0px 0px 0px 15px;
+}
+
+div#z, div#wl_slider, div#bc_slider{
+	display: none;
 }
