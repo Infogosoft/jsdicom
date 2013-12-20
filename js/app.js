@@ -178,7 +178,7 @@ DcmApp.prototype.load_arraybuffer = function(abuf, index, file_count) {
 			this.pixel_spacing = ["1","1"];
 			this.unit = "px";
 		}
-		// @XXX: prettoLoader hides
+		// @XXX: prettyLoader hides
 		$.prettyLoader.hide();
 }
 
@@ -361,7 +361,7 @@ DcmApp.prototype.activate_tool = function(tool_identifier) {
 			this.set_kernel("normal");
 		}
 	}
-	if (tool_identifier == "Blur")
+	else if (tool_identifier == "Blur")
 	{
 		if (this.blured == false)
 		{
